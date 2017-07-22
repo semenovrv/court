@@ -8,7 +8,7 @@
     "Roman Semenov <semenovrv@gmail.com>"
   ],
   "scripts": {
-    "deploy": "gcloud court deploy",
+    "deploy": "gcloud app deploy",
     "start": "node court.js"
   },
   "engines": {
