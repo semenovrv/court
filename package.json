@@ -4,6 +4,7 @@
   "version": "0.0.1",
   "main": "court.js",
   "author": "Roman Semenov",
+  "repository":{"type":"git","url":"https://github.com/semenovrv/court.git"},
   "contributors": [
     "Roman Semenov <semenovrv@gmail.com>"
   ],
