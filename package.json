@@ -1,0 +1,28 @@
+{
+  "name": "court-test-app",
+  "description": "Court timetable test app",
+  "version": "0.0.1",
+  "main": "court.js",
+  "author": "Roman Semenov",
+  "contributors": [
+    "Roman Semenov <semenovrv@gmail.com>"
+  ],
+  "scripts": {
+    "deploy": "gcloud court deploy",
+    "start": "node court.js"
+  },
+  "engines": {
+    "node": ">=4.3.2"
+  },
+  "dependencies": {
+    "express": "latest",
+    "serve-static": "latest",
+    "parseurl": "latest",
+    "qs": "latest",
+    "body-parser": "latest",
+    "mime": "latest",
+    "connect": "latest",
+    "send": "latest",
+    "sqlite3": "latest"
+  }
+}

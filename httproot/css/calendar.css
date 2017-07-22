@@ -1,0 +1,9 @@
+.cal{display:table;border:1px solid black;}
+.cal>*{display:table-row-group;}
+.cal>*>*{display:table-row;}
+.cal>*>*>*{display:table-cell;padding:.2em;width:3em;text-align:center;}
+.cal span.not-current{color: #777;}
+.cal span:hover{background-color:#eeeeee;}
+.cal span.selected{background-color:#8888ff;}
+.cal span.mtitle{text-align:center;width:100%;}
+.cal div.header{border:1px solid black;}

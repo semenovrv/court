@@ -1,0 +1,71 @@
+div.progress
+,div.bg{
+    display:    none;
+    z-index:    7000;
+    position:   absolute;
+    top:		0;
+    left:		0;
+    right:		0;
+    bottom:		0;
+	flex-direction:column;
+	align-items:	center;
+    justify-content:center;
+}
+
+div.progress{
+    background: rgba(255,255,255,.7)
+                url('../pic/ld.gif') 
+                50% 50% 
+                no-repeat;
+}
+div.bg{background-color:rgba(255,255,255,.3);}
+
+ body.loading	div.progress
+,body.login		#login
+,body.confirm	#confirm
+,body.error		#error
+,body.message	#message
+		{display:flex;}
+
+ body.failed	#message .err
+,body.error		#error .err
+		{display:block;color:red;}
+
+ body.failed	#message .dialog
+,body.error		#error	.dialog
+		{border-color:red;border-width:2px;}
+
+.err{display:none;}
+.dialog{
+	display:flex;
+	flex-direction:column;
+	border:1px solid blue;
+	border-radius:1em;
+	padding:1em;
+	opacity:1;
+	background-color:white;
+	z-index:8000;
+	#max-width:90%;
+	max-height:90%;
+}
+.dialog>.title{text-align:center;}
+.dialog>.dialogcontrols{display:flex;margin-top:1em;min-height:1em;}
+.dialog>.dialogcontrols>*{flex-basis:50%;text-align:center;}
+
+.clonetemplate{display:none;}
+
+.hoverbutton{
+	display:none;
+	position:absolute;
+	right:-1em;
+	top:-1em;
+	width:2em;
+	height:2em;
+	background-image: url(../pic/delete-red.svg);
+	background-size: 90%;
+	background-position: center;
+	border: 2px solid #ff5555;
+	border-radius: 1em;
+	z-index: 1;
+}
+.hoverbutton:hover{border-color:#aa2200;}
