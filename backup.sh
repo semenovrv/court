@@ -1,0 +1,1 @@
+cp *.sqlite ../backup/"${PWD##*/}"/
