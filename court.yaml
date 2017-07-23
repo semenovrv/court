@@ -12,6 +12,22 @@
 # limitations under the License.
 
 # [START app_yaml]
+#service: node-court
 runtime: nodejs
 env: flex
+instance_class: B1
+manual_scaling:
+  instances: 1
+    
+resources:
+  cpu: 4
+  memory_gb: 4
+  disk_size_gb: 10
+    
+health_check:
+  enable_health_check: true
+  check_interval_sec: 5
+  timeout_sec: 4
+  unhealthy_threshold: 2
+  healthy_threshold: 2
 # [END app_yaml]

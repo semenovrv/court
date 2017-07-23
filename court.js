@@ -16,15 +16,16 @@ var	 sstatic	=	require('serve-static')
 ,WWW=((root,name,port)=>{return{
  'name':	name
 ,'port':	port
+,'sqlite':	{'time_table':'/time.table.sqlite'}
 ,'maxage':	20*60*1000//20 mins
 ,'root':	{'path':root,'dir':path.join(__dirname,root)}
-,'url':		{'slashes':true,'protocol':'http','hostname':name,'port':port}
-,'gmail':	{'login':'/auth/google/login','callback':'/auth/google/callback'}
-}})('httproot/','localhost',8080)
+,'url':		{'slashes':true,'protocol':'https','hostname':name}//{'slashes':true,'protocol':'http','hostname':name,'port':port}
+,'gmail':	{'login':'/auth/google/ask','callback':'/auth/google/callback'}
+}})('httproot/',process.argv[2]||'court-174506.appspot.com',8080)
 ,GOOGLE={
 'qauth':{
  'response_type':	'code'
-,'redirect_uri':	'http://'+path.join(WWW.name,WWW.gmail.callback)
+,'redirect_uri':	'https://'+path.join(WWW.name,WWW.gmail.callback)
 ,'scope':			'email'
 ,'client_id':	'184030743485-b8e0hqtg8culn3ogpu525tcmmq5ig7ts.apps.googleusercontent.com'
 }
@@ -46,12 +47,13 @@ var	 sstatic	=	require('serve-static')
 				,'cookie':{'maxAge': WWW.maxage,'path':'/'}
 			   ,'rolling':true,'resave':true,'saveUninitialized':true})
 	,oauth2Client = new google.auth.OAuth2(GOOGLE.qauth.client_id,GOOGLE.web.client_secret,GOOGLE.qauth.redirect_uri)
-	,http		=	require('http').Server(connect()
-	.use(sstatic(path.join(WWW.root.dir,'js/')))
-	.use(sstatic(path.join(WWW.root.dir,'css/')))
-	.use(sstatic(path.join(WWW.root.dir,'pic/')))
+	,http		=	require('http').Server(connect().use('/_ah/health',(req,res)=>{res.writeHead(200);res.end()})//gcloud VM health check requests//
+//	.use(sstatic(WWW.root.dir))
+	.use('/js/',sstatic(path.join(WWW.root.dir,'/js')))
+	.use('/css/',sstatic(path.join(WWW.root.dir,'/css')))
+	.use('/pic/',sstatic(path.join(WWW.root.dir,'/pic')))
 	.use((req,res,next)=>{
-		req.query=~req.url.indexOf('?')?qs.parse(parseurl(req).query):{};console.log(req.rawHeaders)
+		req.query=~req.url.indexOf('?')?qs.parse(parseurl(req).query):{};console.log(req.url);
 		res.court={	 'writeHead':	function(){res.writeHead('200',{'Content-Type':mime.lookup('json')});return res}
 					,'end':			data=>{data?res.end(JSON.stringify(data)):res.end()}
 					,'send':		function(err,data){if(err)console.log('ERROR',err);res.court.writeHead().court.end(data)}
@@ -59,27 +61,25 @@ var	 sstatic	=	require('serve-static')
 					,'redirect':	(uuu,opts)=>{
 										uuu=uuu.pathname?url.format(Object.assign(WWW.url,uuu)):uuu
 										res.statusCode=opts?(opts.status||301):301;
-										res.setHeader('Location',uuu);
+										res.setHeader('Location',uuu);console.log('redirected['+res.statusCode+'] to: ',uuu);
 										res.setHeader('Content-Length','0');
 										res.end();
 										return res}
-					,'permit':sess=>{
+					,'permit':sess=>{//khrushcheva.tandem@gmail.com
 								var usr=sess&&sess.user||{},opts=sess?{'path':sess.cookie.path,'expires':sess.cookie.expires}:{'path':'/','maxAge':0}; 
 									res.setHeader('Set-Cookie',[cookieLn('courtuser',usr.email||'guest',opts)]);
-								return usr.email;
+								return (usr.email=="semenovrv@gmail.com")||(usr.email=="khrushcheva.tandem@gmail.com");
 								}
 
 
 					}
 		next()
 		})
-	.use(WWW.gmail.login,(req,res)=>console.log('ask google for',req.url)||res.court.redirect(
+	.use(WWW.gmail.login,(req,res)=>res.court.redirect(
 		 url.format({'slashes':true,'protocol':'https','hostname':'accounts.google.com','pathname':'/o/oauth2/auth','query':Object.assign({},GOOGLE.qauth,{'state':req.query.state||req.url})})
 		,{'status':301}))
-	.use(session)
+	.use(session).use((req,res,next)=>next())
 	.use('/logout',(req,res)=>req.session.destroy(err=>{res.writeHead(304);res.end()}))
-	.use((req,res,next)=>res.court.permit(req.session)?next():res.court.redirect({'pathname':WWW.gmail.login},{'status':302}))
-	.use(sstatic(WWW.root.dir))
 	.use(WWW.gmail.callback,(req,res)=>oauth2Client.getToken(req.query.code,(err,tokens)=>{// GOOGLE reply is redirected always//
 			if(err)return res.court.redirect({'pathname':WWW.gmail.login});
 			oauth2Client.setCredentials(tokens);
@@ -90,6 +90,8 @@ var	 sstatic	=	require('serve-static')
 				:{'pathname':WWW.gmail.login},{'status':302});	console.log('GOOGLE USER',usr)
 			})({'email':gres.emails[0].value});
 	 })}))
+	.use((req,res,next)=>res.court.permit(req.session)?next():res.court.redirect({'pathname':WWW.gmail.login},{'status':302}))
+	.use('/',sstatic(WWW.root.dir,{'index':'week.table.html'}))
 	.use('/sqlite3all',(req,res,next)=>{var query=req.query;
 		new sqlite3.Database((query.db||'court')+'.sqlite',sqlite3.OPEN_READONLY).all(query.statement,res.court.send)
 	})
@@ -106,6 +108,7 @@ var	 sstatic	=	require('serve-static')
 	.use('/sqlite3insert',connect()
 		.use(jsonParser)
 		.use((req,res,next)=>{if(req.method == 'POST'){var  query=req.body
+			console.log('sqlite3insert',query)
 			if(WWW.PINMODE&&(query.PIN!=='6318'))return res.court.serr('Wrong PIN')
 			var	 cc=query.values.length
 				,db = new sqlite3.Database(query.db+'.sqlite',sqlite3.OPEN_READWRITE)
@@ -115,12 +118,17 @@ var	 sstatic	=	require('serve-static')
 			function end(){if(!--cc)query.refresh?db[query.refresh.method](query.refresh.statement,res.court.send):res.court.send()}
 			}else next()})
 		)
+	.use(...sqlite('court'))
+	.use(...sqlite('time.table'))
 
 );
-
+function sqlite(db){return[
+	 '/'+(db=db+'.sqlite')
+	,(req,res)=>(req.session.user.email=='semenovrv@gmail.com')?send(req,db,{'root':__dirname}).pipe(res):(res.writeHead(404),res.end())
+]}
 
 
 
 http.listen(WWW.port);
-console.log(new Date(),'court running...')
+console.log(new Date(),'court running...',WWW.name,GOOGLE)
 
