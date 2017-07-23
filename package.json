@@ -1,10 +1,13 @@
 {
   "name": "court-test-app",
   "description": "Court timetable test app",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "court.js",
   "author": "Roman Semenov",
-  "repository":{"type":"git","url":"https://github.com/semenovrv/court.git"},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/semenovrv/court.git"
+  },
   "contributors": [
     "Roman Semenov <semenovrv@gmail.com>"
   ],
@@ -16,14 +19,17 @@
     "node": ">=4.3.2"
   },
   "dependencies": {
-    "express": "latest",
-    "serve-static": "latest",
+    "connect": "latest",
+    "connect-sqlite3": "latest",
+    "express-session": "latest",
     "parseurl": "latest",
     "qs": "latest",
     "body-parser": "latest",
+    "serve-static": "latest",
     "mime": "latest",
-    "connect": "latest",
+    "cookie": "latest",
     "send": "latest",
+    "googleapis": "latest",
     "sqlite3": "latest"
   }
 }
