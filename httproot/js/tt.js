@@ -224,11 +224,18 @@ Object.assign(court,{
 				(...args)))
 			.then(dd=>dialogs.off('loading')||dd
 				,err=>dialogs.off('loading')||court.rmPIN()||dialogs.error(err,(el,msg)=>el.innerHTML=msg+'<br/>'+'Попробуйте еще раз!').then(_=>Promise.reject(err)))}
-,'setSideMenu':		function(opts){function sw(m,q,v){m.style.display=q?(v||'block'):'none'};
-(function(mm,fn){if(mm)document.body.addEventListener('mousemove',function(evt){fn(evt,mm)});return arguments.callee})
-	(opts.left,	function(evt,mm){var dw=document.documentElement.clientWidth;	sw(mm,evt.clientX*15<dw)})
-	(opts.right,function(evt,mm){var dw=document.documentElement.clientWidth;	sw(mm,(dw-evt.clientX)*15<dw)})
-	(opts.top,	function(evt,mm){var dh=document.documentElement.clientHeight;	sw(mm,evt.clientY*15<dh,'table')})
+,'setSideMenu':		function(opts){function sw(m,q,v){m.style.display=q?(v||'flex'):'none'};
+(function(mm,fn){if(mm)document.body.addEventListener('mousemove',evt=>{fn(evt,mm)});return arguments.callee})
+	(opts.left,	(evt,mm)=>(dw=>sw(mm,evt.clientX*15<dw))		(document.documentElement.clientWidth))
+	(opts.right,(evt,mm)=>(dw=>sw(mm,(dw-evt.clientX)*15<dw))	(document.documentElement.clientWidth))
+	(opts.top,	(evt,mm)=>(dh=>sw(mm,evt.clientY*15<dh,'table'))(document.documentElement.clientHeight))
+	
+	if(opts.top)(el=>el.addEventListener('keypress',evt=>{if(evt.key=="Enter"){
+		sw(opts.top);
+		document.body.style.zoom=el.value+'%';
+		print();
+		return false;
+	}}))(id$('print'));
 }
 });
 })(window.crt||(window.crt={}));
