@@ -1,0 +1,36 @@
+<!DOCTYPE html />
+<html>
+<head><title>Теннисный корт в Потапово</title>
+<meta charset="UTF-8"/>
+<style>
+	html,body{margin:0;}
+	.item{display:block;text-align:center;}
+</style>
+</head><body>
+<div style="display:table;width:100%;height:100%;">	
+<div style="display:table-row;">	
+<div style="display:table-cell;width:1%;background-color:#d0d0ff;padding:.5em;vertical-align:top;">
+	<a class="item">расписание</a>
+	<select class="item" style="width:100%;" id="room">
+		<option value="hall">зал</option>
+		<option value="lcourt" selected>корт 1</option>
+		<option value="rcourt">корт 2</option>
+	</select>
+	<a class="item" href="day.table.html" target="page">сегодня</a>
+	<a class="item" href="cleantable.html" target="page">уборка</a>
+	<a class="item" style="padding-top: 1em;">посмотреть</a>
+	<a class="item" href="accounts.html" target="page">финансы</a>
+	<a class="item" href="meter.plots.html" target="page">счетчики</a>
+	<a class="item"style="padding-top: 1em;">изменить</a>
+	<a class="item" href="balance.html" target="page">финансы</a>
+	<a class="item" href="meter.html" target="page">счетчики</a>
+</div>
+<iframe name="page" style="display:table-cell;width:100%;height:100%;border:none;"></iframe>
+</div></div>
+<script>
+(page=>(loadTimeTable=>{
+	loadTimeTable({'target':{'value':document.querySelector('option:checked').value}});
+	document.getElementById('room').addEventListener('change',loadTimeTable);
+})(evt=>{page.src='week.table.html?room='+evt.target.value}))(document.querySelector('iframe[name=page]'))
+</script>
+</body></html>
