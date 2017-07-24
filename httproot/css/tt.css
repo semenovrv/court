@@ -36,3 +36,21 @@ span.timeCell:hover .hoverbutton{display:block;}
 	}
  span.cellsubj,span.cellcust{display:block;font-family:Arial, Helvetica, sans-serif;font-size:1.2em;}
  span.cellcust{font-size:bigger;text-align:right;}
+
+
+
+#forget{background-color:red;}
+div.sw{	border:1px solid black;
+		position:fixed;
+		top:0;
+		display:none;
+		background-color:white;
+}
+div.vsw{width:5%;height:100%;cursor:pointer;background-color: #b0b0ff;}
+#swmenu{width:100%;text-align:center;}
+div.vsw>span{
+	position:relative;
+	top:50%;
+	transform:rotate(270deg);
+	transform-origin: 30% 0;
+}
