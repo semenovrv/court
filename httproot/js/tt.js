@@ -49,9 +49,9 @@ var self=Object.assign(this,{
 
 function Hall(lessons,opts){
 var timetable,hall=this;
-//Object.defineProperty(hall,'lessons',	{'get':_=>lessons,	'set':json=>lessons=new Lessons(hall,json)})
+Object.defineProperty(hall,'lessons',	{'get':_=>lessons,	'set':json=>lessons=new Lessons(hall,json)})
 //Object.defineProperty(hall,'timetable',	{'get':_=>timetable,'set':json=>timetable=new TimeTable({'lessons':lessons})})
-Object.defineProperty(hall,'lessons',	{'get':_=>lessons})
+//Object.defineProperty(hall,'lessons',	{'get':_=>lessons})
 Object.defineProperty(hall,'timetable',	{'get':_=>timetable})
 Object.assign(hall,{
  'subjects': new HallData('select*from subjects order by title COLLATE NOCASE',(el,dd)=>el.value=dd.title)
