@@ -321,23 +321,20 @@ Object.assign(TimeCell.prototype=Object.create(Parent.prototype),{
 				)}
 				timeDialog().then(data=>{
 				
-	((less,elel)=>(('less_id'in(less=court.hall.lessons.find(less)||less))
-		?Promise.resolve(less)
-		:((table,data)=>
-			court.postSQL({'db':'court','refresh':{'method':'all','statement':hall[table].statement}},table,[data.names.map(nn=>'"'+nn+'"'),[data.names.map(nn=>data[nn])]])
-				.then(hall[table].update)
-				.then(_=>hall[table].find(data))
-		 )('lessons',less))
+	(hall=>((data,elel)=>('less_id'in(data=hall.lessons.find(data)||data)
+		?Promise.resolve(data)
+		:(tt=>court.postSQL({'db':'court','refresh':{'method':'all','statement':hall[tt].statement}},tt,[data.names.map(nn=>'"'+nn+'"'),[data.names.map(nn=>data[nn])]])
+				.then(lessons=>((hall[tt]=lessons),hall[tt].find(data))))('lessons'))
 		.then(less=>((table,data)=>
 				court.postSQL({'db':'time.table'},table,[['"start"','"less_id"','"end"','"from"','"to"'],[data]]))
-			(court.hall.name,(mon=>[
+			(hall.name,(mon=>[
 			 mon,less.less_id,new court.TimeSelector(mon,elel,DD)[elel['count'].value]
 			,DD.timeDate(mon,day,elel['starttime'].value)
 			,DD.timeDate(mon,day,elel['endtime'].value)
 			])(court.dates.monday))
 			)
-	)(new court.Lesson(	 court.hall['customers'].findData(data['customer']).cust_id
-					,court.hall['subjects'].findData(data['subject']).subj_id,true),document['timeform'].elements)
+	)(new court.Lesson(	 hall['customers'].findData(data['customer']).cust_id
+						,hall['subjects'].findData(data['subject']).subj_id,true),document['timeform'].elements))(court.hall)
 			.catch(_=>timeDialog(data))
 	}).then(_=>court.reload())
 				
