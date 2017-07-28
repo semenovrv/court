@@ -26,7 +26,7 @@ return{
 ,'maxage':	20*60*1000//20 mins
 ,'root':	(root={'path':'/','dir':path.join(__dirname,root)})
 ,'sroot':	{'path':sroot,'dir':path.join(root.dir,sroot)}
-,'gmail':	(gg=>Object.assign(gg,{'obj':{'pathname':path.join(sroot,gg.login)},'callback':'/auth/google/callback'}))({'login':'/auth/google/obtain'})
+,'gmail':	(gg=>Object.assign(gg,{'obj':{'pathname':path.join(sroot,gg.login)},'callback':'/auth/google/callback'}))({'login':'/auth/google/login'})
 ,'url':		{'slashes':true,'protocol':'https','hostname':name}//{'slashes':true,'protocol':'http','hostname':name,'port':port}
 //,'UserGroup':UserGroup
 ,'groups':	{
