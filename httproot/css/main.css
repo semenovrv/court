@@ -14,7 +14,7 @@ div.progress
 
 div.progress{
     background: rgba(255,255,255,.7)
-                url('../pic/ld.gif') 
+                url('/pic/ld.gif') 
                 50% 50% 
                 no-repeat;
 }
@@ -61,7 +61,7 @@ div.bg{background-color:rgba(255,255,255,.3);}
 	top:-1em;
 	width:2em;
 	height:2em;
-	background-image: url(../pic/delete-red.svg);
+	background-image: url(/pic/delete-red.svg);
 	background-size: 90%;
 	background-position: center;
 	border: 2px solid #ff5555;
