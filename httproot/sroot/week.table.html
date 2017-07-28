@@ -1,0 +1,453 @@
+<!DOCTYPE html />
+<html>
+<head><title>Расписание занятий в зале</title>
+<meta charset="UTF-8"/>
+	<script src="/js/dialogs.js"></script>
+	<script src="/js/main.js"></script>
+	<script src="/js/tt.js"></script>
+	<script src="/js/calendar.js"></script>
+<style>
+ span.today{color:red;}
+ span.newcell{background-color:#ffffbb;border:1px solid red;}
+	
+	.button{display:table-cell;
+		border:1px solid green;
+		padding:0.2em;
+		margin:0.2em;
+		color:blue;
+		width:4em;
+		white-space: nowrap;
+		background-color:#dddddd;
+		text-decoration:none;
+		}
+	.button:hover{background-color:#eeeeee;border:1px solid yellow;cursor:pointer;}
+	
+	 body.timeset	#timeset
+	,body.newcust	#newcust
+	,body.calendar	#calendar
+	,body.select	#select
+					{display:flex;}
+
+
+	 body.tmcount	#showcal
+	,body.tmcount	#tmcount
+	,body.tmday		#showcal
+	,body.tmday		#tmday
+					{display:inline;}
+
+
+div.rows>*{display:block;}
+
+/*
+#custominput{position:absolute;z-index:101;}
+div.suggest{position:absolute;background-color:white;z-index:100;display:none;}
+div.visible{display:block;border:1px solid black;}
+div.suggest>*{display:block;}
+div.suggest div.item{cursor:pointer;}
+div.suggest div.item:hover{background-color:#f3f3d3;}
+
+ div.ttable		{display:table;}
+ div.ttable>*	{display:table-row;}
+ div.ttable>*>*	{display:table-cell;}
+ div.ttable>*>*:first-child{text-align:right;}
+*/
+.new{color:red; font-weight:bold;}
+input:valid{background-color:#ddffdd;}
+input:invalid{background-color:#ffdddd;}
+
+ #showcal
+,#tmcount
+,#tmday
+,body.calendar #cal .calnext
+,body.calendar #cal .calprev
+				{display:none;}
+				
+div.halfs{display:flex;}
+div.halfs>*{flex-basis:50%;text-align: center;}
+</style>
+<link href="/css/main.css"		type="text/css" rel="stylesheet"/>
+<link href="/css/tt.css"		type="text/css" rel="stylesheet"/>
+<link href="/css/calendar.css"	type="text/css" rel="stylesheet"/>
+</head>
+
+<body class="loading tmcount">
+<div class="progress"></div>
+
+<div id="timeset" class="bg"><div class="dialog">
+<h3 class="title"></h3>
+<form name="timeform">
+<div class="rows">
+	<div class="halfs"><input name="starttime" type="time" step="60"/><input name="endtime" type="time" step="60"/></div>
+	<div style="white-space:nowrap;">
+		<select name="count">
+			<option value="tmcount" selected="selected">кол-во занятий</option>
+			<option value="tmalways">					постоянно</option>
+			<option value="tmday">						последний день</option>
+		</select>
+		<span id="tmcount">	<input name="number"	type="number" min="1" style="width:3em;"/></span>
+		<span id="tmday">	<input name="day"		type="date"/></span>
+		<span id="showcal" style="cursor:pointer;border-radius:.5em;border:1px solid black"><img src="/pic/calendar-black.svg" style="height:1em;width:2em;"/></span>
+	</div>
+	<div>
+	<input name="customer"	list="idcustomer"	onfocus="this.select();" style="width:100%;" autocomplete="family-name" placeholder="Хрущев Артем"/>
+	<datalist id="idcustomer" name="customer"></datalist>
+	</div>
+	<div><input name="subject"	list="idsubject"	onfocus="this.select();" style="width:100%;" autocomplete="organization-title" placeholder="Теннис"/><datalist id="idsubject" name="subject"></datalist></div>
+</div>
+</form>	
+<div class="dialogcontrols"><a id="settime" class="button resolve">Ok</a><a id="closetime" class="button reject">Cancel</a></div>
+</div></div>
+
+
+<div id="newcust" class="bg"><div class="dialog">
+<h3 name="message" class="title"></h3>
+<form name="custform"><div class="ttable">
+<div><span>Фамилия</span>		<input name="lastname"	type="text"		autocomplete="family-name"	placeholder="Хрущев" pattern="\s*[A-Za-zА-Яа-я\-]+\s*"/></div>
+<div><span>Имя, О.</span>		<input name="name"		type="text"		autocomplete="given-name"	placeholder="Артем"/></div>
+<div><span>email</span>			<input name="email"		type="email"	autocomplete="email" inputmode="email"/></div>
+<div><span>Телефон</span>		<input name="phone"		type="text"		autocomplete="tel"			placeholder="+79851129033" pattern="\s*\+7\s*\d{3}\s*\d{7}\s*"/></div>
+<div><span>Автомобиль</span>	<input name="car"		type="text" 								placeholder="ауди" pattern="\s*[A-Za-zА-Яа-я]+\s*"/></div>
+<div><span>Номер а/м</span>		<input name="plates"	type="text" 								placeholder="а177ра777" inputmode="tel"
+	pattern="\s*[АВЕКМНОРСТУХавекмнорстухABEKMHOPCTYXabekmhopctyx]{1,2}\s*\d{3}\s*[АВЕКМНОРСТУХавекмнорстухABEKMHOPCTYXabekmhopctyx]{1,2}\s*\d{2,3}\s*"/></div>
+</div></form>
+<div class="dialogcontrols">	
+	<a class="button resolve">Ok</a>
+	<a class="button reject">Cancel</a>
+</div>
+</div></div>
+	
+<div id="select" class="bg"><div class="dialog">
+<h3 class="title">Отобразить расписание по</h3>
+<form>
+	<label for="hinput"><input id="hinput" type="radio" name="hall" value="hall"/>залу</label>
+	<label for="linput"><input id="linput" type="radio" name="hall" value="lcourt" checked="checked"/>корту 1</label>
+	<label for="rinput"><input id="rinput" type="radio" name="hall" value="rcourt"/>корту 2</label>
+</form>
+<div class="dialogcontrols"><span class="button resolve">Ok</span></div>
+</div></div>
+
+
+<div id="confirm" class="bg"><div class="dialog">
+<h3 class="title" name="message"></h3>
+<div class="dialogcontrols"><span class="button resolve">Ok</span><span class="button reject">вернуться</span></div>
+</div></div>
+
+
+
+
+<div id="message"  class="bg"><div class="dialog">
+	<h1 class="err title">ERROR!</h1>
+	<h3 name="message"></h3>
+</div></div>
+
+<div id="error"  class="bg"><div class="dialog">
+	<h1 class="err title">ERROR!</h1>
+	<h3 name="message"></h3>
+</div></div>
+
+<div id="calendar"  class="bg"><div class="dialog">
+<div id="cal" style="text-align:center;"></div>
+<div class="dialogcontrols"><span class="button calprev"><<</span><span class="button resolve">закрыть</span><span class="button calnext">>></span></div>
+</div></div>
+
+
+	<div class="table">
+		<div class="clonetemplate"><div class="row"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div></div>
+		<div class="headers"></div>
+		<div class="timelines"></div>
+	</div>
+	<div id="swmenu" class="row sw">
+		<span class="bbutton" id="forget">забыть PIN</span>
+		<span><input id="print"	type="number"	placeholder="print zoom" min="20" max="200" value="80"/></span>
+	</div>
+	<div style="left:0;"	id="swleft"	class="sw vsw"><span class="celltime"><a name="from"></a>-<a name="to"></a></span></div>
+	<div style="right:0;"	id="swright"class="sw vsw"><span class="celltime"><a name="from"></a>-<a name="to"></a></span></div>
+	
+
+<script>
+(court=>{
+var  DD=new Day
+	,dialogs=court.initDialogs()
+Object.assign(court,{
+ 'dialogs':dialogs
+,'Day':DD
+,'reload':(hname,mon)=>location=location.href.split('?')[0]+'?room='+(hname||court.hall.name)+'&monday='+(mon||court.dates.monday)
+,'init':(form=>(hname=>{
+var  hall=court.hall=Object.assign(new court.Hall(null,court.dates),{'name':hname})
+	,elel=form.elements
+
+if('wday'in court.dates){
+	court.wdates.children[court.dates.wday].classList.add('today');
+	court.wdays.children[court.dates.wday].classList.add('today');
+}
+
+(function(sw,eld){
+var  mon=new Date(court.dates.monday).setDate(eld)
+	,sun=new Date(court.dates.monday).setDate(eld+6)
+	sw.querySelector('a[name=from]').innerHTML=DD.shortDate(mon);
+	sw.querySelector('a[name=to]').innerHTML=DD.shortDate(sun);
+	sw.addEventListener('click',_=>court.reload(hname,mon));
+return arguments.callee;
+})(sw.left,court.dates.mondate-7)(sw.right,court.dates.mondate+7);
+	hall.fetchJSON(hname,elel,['table','cloneTimeLine','dates'].reduce((oo,pp)=>((oo[pp]=court[pp]),oo),{}))
+		.then(tt=>{
+			tt.forLine((ln,ll)=>{var from;ln.forEach(tc=>{
+				from=tc.from;
+				for(var cc,is=cl=>cc.classList.contains(cl),ii=ll;(ln=court.table.children[++ii])&&(cc=ln.children[tc.col])&&!is('timeCell')&&court.LineRecord.prototype.occupied(cc);)
+					cc.addEventListener('click',tc.click)
+				});
+				[].forEach.call(court.table.children[ll].children,cc=>!court.LineRecord.prototype.occupied(cc)&&cc.addEventListener('click',court.TimeCell.prototype.emptyClick))
+				
+			});
+			
+			('wday'in court.dates)&&(lr=>lr&&lr.select(court.dates.wday))(tt.updateTime(court.dates.monday));
+			dialogs.off('loading');
+		})
+	
+	court.wdays.addEventListener('click',court.TimeCell.prototype.emptyClick);
+	court.wdates.addEventListener('click',court.TimeCell.prototype.emptyClick);
+	
+	((tm0,tm1)=>{
+	})(elel['starttime'],elel['endtime']);
+	
+	(id=>{
+	id$('showcal').addEventListener('click',_=>{dialogs.ask(id)});
+	(cal=>(fn=>{fn('.calnext');fn('.calprev')})(sel=>cal.querySelector(sel).addEventListener('click',_=>id$('cal').querySelector(sel).click())))(id$(id))
+	})('calendar');
+}))(document.timeform)
+
+
+
+
+
+});
+
+function elid(el){return [].indexOf.call(el.parentNode.children,el)}
+function timeset(	elel,dt,dd){
+					var app=(input,value,mn,mx)=>(Object.assign(input=elel[input],{'title':value,'value':value},mn?{'min':mn}:{},mx?{'max':mx}:{}),app);
+											app	('starttime',	DD.timeString(dt,dd.from),	DD.timeString(dt,dd.from),DD.timeString(dt,dd.to))
+												('endtime',		DD.timeString(dt,dd.to),	DD.timeString(dt,dd.from),DD.timeString(dt,dd.to));
+		if('less_id'in dd)(lesson=>(val=>{	app	('customer',	val(court.hall.customers.data,'cust_id'))
+												('subject',		val(court.hall.subjects.data,'subj_id'))
+		})((arr,id)=>arr.find(cc=>cc[id]==lesson[id]).option.value))(court.hall.lessons.find(dd.less_id,true));
+		
+		
+		
+		
+}
+
+
+function timedone(){
+var	 wrdex=/^\s*(\S+)\s*/
+	,elel=	document['custform'].elements
+	,els=	document['timeform'].elements
+	,hall=court.hall
+	,dataPromise=(oo,text)=>(data=>data&&Promise.resolve(data))(hall[oo].findData(text))
+	,trim=ss=>(ss||'').trim()
+	,newObject=(nn,vv)=>(oo=>((oo[nn]=vv),oo))({})
+	,postData=(db,table,data)=>court.postSQL(
+		 {'db':db,'refresh':{'method':'all','statement':hall[table].statement}},table
+		,(_=>{var nnn=[],vvv=[];for(var nn in data){nnn.push('"'+nn+'"');vvv.push(data[nn])};return[nnn,[vvv]]})()
+		).then(hall[table].update).then(_=>data)
+return Promise.all([
+ (elname=>(((table,name,cust_dialog)=>dataPromise(table,name)||(cust_dialog=data=>dialogs
+	.ask('newcust',el=>{if(!data){
+							document['custform'].reset();
+							el.textContent=			name+' в базе отсутствует, завести новым?';
+			(name=>{		elel['lastname'].value=	name[1]||'';
+							elel['name'].value=		trim(name[2]);
+			})(name.split(wrdex))}})
+	.then(_=>{
+		var	 Pcust=_=>cust_dialog(data)
+			,Ppost=_=>postData('court',table,data).catch(Pcust);
+		data=['lastname','name','email','phone'].reduce((oo,nn)=>((vv=>vv.length&&(oo[nn]=vv))(trim(elel[nn].value).toLowerCase()),oo)
+				,(plates=>plates.length
+						?{'pass':('A 1 '+(elel['car'].value.split(wrdex)[1]||'машина')+' '+plates).toLowerCase()}
+						:{})(elel['plates'].value.replace(/\s/g,'')));
+		data.phone=(data.phone||'').replace(/[\s\(\)\-_]/g,'');
+		return(('name'in data)||('lastname'in data))
+			?document.custform.querySelectorAll('input:invalid').length
+				?dialogs.ask('confirm',el=>el.innerHTML="Не все поля введены правильно<br/>сохранить все равно?").then(Ppost):Ppost()
+			:dialogs.on('failed').message(el=>el.textContent='Имя не заполнено!').then(Pcust)
+}))())('customers',els[elname].value||'').then(dd=>newObject(elname,hall.customerValue(dd)),_=>Promise.resolve())))('customer')
+
+,(elname=>(((table,name)=>dataPromise(table,name)||dialogs
+	.ask('confirm',el=>el.textContent='Создать секцию '+name+'?')
+	.then(_=>postData('court',table,{'title':name.toLowerCase()}))
+)('subjects',els[elname].value||'').then(dd=>newObject(elname,dd['title']),_=>Promise.resolve())))('subject')
+
+]).then((aa,dd)=>aa.reduce((res,oo)=>oo?Object.assign(dd,oo)&&res:oo,dd={})?Promise.resolve(dd):Promise.reject(dd))}
+
+
+
+function setTitle(dialog,mon,day){dialog.querySelector('.title').textContent=DD.WeekDays[day]+' '+DD.localDayString(DD.dayDate(mon,day))}
+
+// TimeCell class //
+court.TimeCell=(Parent=>{
+function TimeCell(cell,...opts){Parent.call(this,cell,...opts);
+Object.defineProperty(this,'day',{'get':_=>TimeCell.prototype.day(cell)});
+Object.defineProperty(this,'col',{'get':_=>elid(cell)});
+var  self=Object.assign(this,{'click':evt=>{evt.stopPropagation();dialogs.ask('confirm',el=>el.textContent='Освободить время?').then(free).then(_=>court.reload())}})
+	,free=_=>((table,data)=>court.postSQL(
+ {'db':'time.table'},table
+,[['start','from'],[court.dates.monday+data.to-DD.ONEWEEK]]
+,(key,vv)=>(vvv=>{return{'statement':'update '+table+' set "end"=? where '+key.map(nn=>'"'+nn+'"=?').join(' and '),'values':vvv}})([key.reduce((vv,nn)=>(vv.push(data[nn]),vv),vv)])
+).catch(free))(court.hall.name,self.data);
+cell.addEventListener('click',self.click);
+}
+
+Object.assign(TimeCell.prototype=Object.create(Parent.prototype),{
+ 'day':			cell=>elid(cell)
+,'emptyClick':	function(){var  cell=this,LL=elid(cell.parentNode),day=TimeCell.prototype.day(cell)
+				function timeDialog(data){return dialogs.ask('timeset',(form,dialog)=>{
+					var elel=form.elements;
+					data&&(dd=>{for(var nn in dd)(elel[nn]||{}).value=data[nn];return dd})(data)||(col=>(data=>{
+						var prev,next,mon=new Date(court.dates.monday)
+						court.hall.timetable.forLine((ln,ll)=>(cc=>ll<LL?(prev=data(cc)||prev):(next=data(cc)))(ln[day])&&next);
+						form.reset();
+						timeset(elel,mon,{'from':prev?prev.to:DD.from(day,3),'to':next?next.from:DD.from(day,24)});
+						(dt=>{
+							new court.Calendar(id$('cal'),dt).showCurrent();
+							elel['number'].value=1;
+							(ds=>Object.assign(elel['day'],{'value':ds,'min':ds}))(DD.localDayString(dt));
+						})(DD.dayDate(mon,day));
+						elel['subject'].value=court.hall.subjects.data.find(ss=>ss.subj_id==10).title;
+						setTitle(dialog,mon,day);
+					})(cc=>cc&&(cc.col==col)&&cc.isTimeCell&&cc.data))(elid(cell))
+				},'timeform').then(_=>timedone()
+					.then(dd=>document['timeform'].querySelectorAll('input:invalid').length
+						?dialogs.error({'message':'Не все поля введены правильно'}).then(_=>Promise.Reject(dd)):Promise.resolve(dd))
+					.catch(timeDialog)
+				)}
+				timeDialog().then(data=>{
+				
+	(hall=>((data,elel)=>('less_id'in(data=hall.lessons.find(data)||data)
+		?Promise.resolve(data)
+		:(tt=>court.postSQL({'db':'court','refresh':{'method':'all','statement':hall[tt].statement}},tt,[data.names.map(nn=>'"'+nn+'"'),[data.names.map(nn=>data[nn])]])
+				.then(lessons=>((hall[tt]=lessons),hall[tt].find(data))))('lessons'))
+		.then(less=>((table,data)=>
+				court.postSQL({'db':'time.table'},table,[['"start"','"less_id"','"end"','"from"','"to"'],[data]]))
+			(hall.name,(mon=>[
+			 mon,less.less_id,new court.TimeSelector(mon,elel,DD)[elel['count'].value]
+			,DD.timeDate(mon,day,elel['starttime'].value)
+			,DD.timeDate(mon,day,elel['endtime'].value)
+			])(court.dates.monday))
+			)
+	)(new court.Lesson(	 hall['customers'].findData(data['customer']).cust_id
+						,hall['subjects'].findData(data['subject']).subj_id,true),document['timeform'].elements))(court.hall)
+			.catch(_=>timeDialog(data))
+	}).then(_=>court.reload())
+				
+}});
+return TimeCell;
+})(court.TimeCell);
+
+// TimeTable class //
+court.TimeTable=(Parent=>{	
+function TimeTable(opts){Parent.call(this,opts);
+var  self=this,oo=self.options,dday=new Day()
+Object.assign(self,{
+ 'append':data=>(self.appendCells(data,tm=>dday.day(tm),dday.time),self)
+,'updateTime':mon=>(court.LineRecord.prototype.selectoff(),(tm=>self.forLine((ln,ll)=>ln.find(tc=>(tc=(tc||{}).busy)&&tc(tm))))(new Date()-mon))
+});
+};
+TimeTable.prototype=Object.create(Parent.prototype);
+return TimeTable;
+})(court.TimeTable);
+
+
+var	 sw={'left':id$('swleft'),'right':id$('swright'),'top':id$('swmenu')}
+	,query=getQueryParameters();
+	
+
+(table=>((dt,DD,tl)=>{
+Object.assign(court,{
+ 'table':table.querySelector('.timelines')
+,'cloneTimeLine':_=>new court.TableLine(court.table,tl.cloneNode(true))
+});
+// Create table header cells//
+['wdates','wdays'].forEach((id,ln)=>{
+	(ln=court.cloneTimeLine().htmlElement)//.classList.add(id);
+	table.querySelector('.headers').appendChild(court[id]=ln);
+});
+	
+// Set current week //
+court.dates=((qmon,mon)=>{
+Object.defineProperty(court.TimeCell.prototype,'monday',	{'get':_=>new Date(dd.monday)});
+	if(qmon)qmon=new Date(+qmon);
+var dd={'monday':DD.localDayStart(qmon?(new Date(+qmon)):mon)}
+	dd.mondate=new Date(dd.monday).getDate();
+	if(mon.valueOf()===dd.monday)dd.wday=(dt.getDay()||7)-mon.getDay();
+
+// Init table header //
+DD.WeekDays.forEach((wd,ii)=>{
+	court.wdays.children[ii].textContent=wd;
+	court.wdates.children[ii].textContent=DD.shortDate(new Date(dd.monday).setDate(dd.mondate+ii))
+});
+	
+return dd})(query.monday,newMonday(DD.localDayStart(dt)));
+
+
+
+(query.room?Promise.resolve(query.room):court.dialogs.ask('select').then(_=>id$('select').querySelector('input:checked').value)).then(rr=>court.init(rr));
+
+
+((sel,dd)=>{
+var opt=sel.querySelector('option:checked');
+	sel.addEventListener('change',_=>{dd.off(opt.value);dd.on(sel.value);opt=sel.options[sel.selectedIndex]});
+})(document.timeform.elements['count'],court.dialogs);
+
+
+court.setSideMenu(sw);
+
+})(new Date(),court.Day,table.querySelector('.clonetemplate>div:first-child')))(document.body.querySelector('.table'));
+})(window.crt||{});
+
+
+
+
+/*
+((input,div,cdiv,sel)=>{
+var  tl=div.querySelector('.clonetemplate>div:first-child')
+	,clear=cc=>{[].forEach.call(cdiv.children,ch=>ch.remove());div.classList.remove('visible')}
+	,dialogs=window.crt.dialogs
+	,addcust=tl.cloneNode();
+
+addcust.textContent='завести';
+addcust.classList.add('new');
+addcust.addEventListener('click',fn=>(fn=(_=>dialogs.ask('newcust').then(_=>{
+	
+	var	 elel=document.custform.elements
+		,data=['lastname','name','email','phone'].reduce((oo,nn)=>((vv=>vv.length&&(oo[nn]=vv))(elel[nn].value.trim()),oo)
+		,Object.assign({'new':true}
+			,(plates=>plates.length
+				?{'pass':'A 1 '+(elel['car'].value.match(/^\s*(\S+)[\s$]/g)[0]||'машина')+' '+plates}
+				:{})(elel['plates'].value.replace(/\s/g,''))));
+	if(!('name'in data)&&!('lastname'in data)){
+		dialogs.on('failed');
+		dialogs.message(el=>el.textContent='Имя не заполнено!');
+		fn();
+	}else{
+		console.log(data)
+		clear()
+	}
+//ArrayData.prototype.update.call([data])
+})))());
+div.appendChild(addcust);
+	
+input.addEventListener('keyup',(evt)=>{
+if((cc=>!((cc==27)&&clear())&&(cc>=65&&cc<=90||cc>=97&&cc<=122||cc==8||cc==46))(evt.keyCode))(val=>{clear();if(val){
+	var re=new RegExp(input.value.trim(),'i');
+	[].forEach.call(sel.children,opt=>(text=>{if(re.test(opt.text)){
+		(el=>{	el.textContent=text;
+				el.addEventListener('click',_=>{sel.value=opt.value;input.value=text;clear()});
+				cdiv.appendChild(el);
+		})(tl.cloneNode());
+	}})(opt.textContent));
+	div.classList.add('visible');
+	
+}})(input.value)});
+})(id$('custominput'),document.body.querySelector('.suggest'),id$('customers'),document.custform.elements['customer']);
+*/	
+</script>	
+</body></html>
