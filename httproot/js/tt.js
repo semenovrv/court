@@ -15,7 +15,7 @@ function Lesson(cid,sid){if(arguments.length<2)Object.assign(this,cid);else{
 Object.defineProperty(Lesson.prototype,'new',{'get':function(){return!('less_id'in this)}});
 Lesson.prototype.names=['cust_id','subj_id'];
 Lesson.cmp=(l1,l2)=>!Lesson.prototype.names.find(nn=>l1[nn]!=l2[nn]);
-Lesson.htmlTitles=[,,,,,,,,,,'<img src="./pic/tennis.svg"/>','<img src="./pic/football.svg"/>'];
+Lesson.htmlTitles=[,,,,,,,,,,'<img src="/pic/tennis.svg"/>','<img src="/pic/football.svg"/>'];
 Object.defineProperty(Lesson.prototype,'htmlTitle',{'get':function(){return this.iconTitle||('<span class="cellsubj">'+this.title+'</span>')}});
 Object.defineProperty(Lesson.prototype,'iconTitle',{'get':function(){return Lesson.htmlTitles[this.subj_id]}});
 
