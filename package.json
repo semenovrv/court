@@ -1,7 +1,7 @@
 {
   "name": "court-test-app",
   "description": "Court timetable test app",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "main": "court.js",
   "author": "Roman Semenov",
   "repository": {
