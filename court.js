@@ -26,6 +26,7 @@ return{
 ,'maxage':	20*60*1000//20 mins
 ,'root':	(root={'path':'/','dir':path.join(__dirname,root)})
 ,'sroot':	{'path':sroot,'dir':path.join(root.dir,sroot)}
+,'login':	'/login.html'
 ,'gmail':	(gg=>Object.assign(gg,{'obj':{'pathname':path.join(sroot,gg.login)},'callback':'/auth/google/callback'}))({'login':'/auth/google/login'})
 ,'url':		{'slashes':true,'protocol':'https','hostname':name}//{'slashes':true,'protocol':'http','hostname':name,'port':port}
 //,'UserGroup':UserGroup
@@ -72,10 +73,10 @@ return{
 										res.end();
 										return res;}
 					,'newState':	(state,nodef)=>{return{'state':state||req.query.state||!nodef&&req.originalUrl};}
-					};
+					};console.log(req.url)
 		next();
 		})
-	.use(WWW.gmail.login,(req,res)=>res.court.redirect(
+	.use(WWW.gmail.login,(req,res)=>console.log('googlogin')||res.court.redirect(
 		 url.format({'slashes':true,'protocol':'https','hostname':'accounts.google.com','pathname':'/o/oauth2/auth','query':Object.assign({},GOOGLE.qauth,res.court.newState())})))
 	.use(session)
 	.use('/logout',(req,res)=>req.session.destroy(()=>{res.writeHead(304);res.end();}))
@@ -88,6 +89,7 @@ return{
 				:(Object.assign(req.session,{'user':usr={'email':usr.emails[0].value}})
 					,userAccess(req,res,_=>console.log('GOOGLE USER',usr)||res.court.redirect({'pathname':req.query.state})))
 	 )))
+	.use('/auth',sstatic(path.join(WWW.sroot.dir,'auth')))
 	.use(userAccess)
 	.use('/sqlite3all',(req,res)=>{var query=req.query;
 		new sqlite3.Database((query.db||'court')+'.sqlite',sqlite3.OPEN_READONLY).all(query.statement,res.court.send);
@@ -118,9 +120,10 @@ if(!res.court.error&&(usr||{}).email&&GroupMethod('guest')[1](req,0,()=>console.
 		res.setHeader('Set-Cookie',[cookieLn('courtuser',usr.email,{'path':sess.cookie.path,'expires':sess.cookie.expires})]);
 		next();
 }else{	if(usr)delete req.session.user;
-		obj=Object.assign({},WWW.gmail.obj);
-		Object.assign(obj.query||(obj.query={}),res.court.newState(res.court.state));
-		res.court.redirect(obj);
+		//obj=Object.assign({},WWW.gmail.obj);
+		//Object.assign(obj.query||(obj.query={}),res.court.newState(res.court.state));
+		//res.court.redirect(obj);
+		res.court.redirect({'pathname':path.join(WWW.sroot.path,WWW.login),'query':Object.assign(res.court.newState(res.court.state),{'login':WWW.gmail.login})});
 }}
 
 function GroupMethod(mm){var GG;return['/'+mm,(...aaa)=>
