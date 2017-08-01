@@ -1,0 +1,5 @@
+<html><head></head><body><h1>Идет авторизация...</h1><script>
+	console.log(location.origin);
+	var qq=location.search.split('&login=');console.log('qq',(top===window?decodeURIComponent(qq[1]):top.location.origin)+qq[0],qq);
+	setTimeout(()=>location=(top===window?decodeURIComponent(qq[1]):top.location.origin)+qq[0],20000)
+</script></body></html>
