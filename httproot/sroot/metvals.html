@@ -1,0 +1,112 @@
+<!DOCTYPE html />
+<html>
+<head>
+<meta charset="UTF-8"/>
+	<script src="/js/dialogs.js"></script>
+	<script src="/js/main.js"></script>
+<link href="/css/main.css"	type="text/css" rel="stylesheet"/>
+<style>
+	div.row select{display:table-cell;vertical-align:top;}
+	div.row>span{display:table-cell;border-bottom:1px dashed grey;}
+	div.row{display:table-row;}
+	.date{font-style:  italic; padding-right:1em; white-space:nowrap;}
+	.data{font-family:  Courier, monospace;text-align:right;padding-right:1em;}
+	.title>span{font-weight: bold;text-align:center;}
+	.row.selected{background-color:#ffeeff;}
+
+	.custom,.sum,.tariffs{text-align:right;}
+	#limits{display:table;}
+	#limits span{padding-right:1em;}
+	
+	#data{display:table;}
+	#data>*{display:table-row-group;}
+</style>
+</head><body class="loading">
+<div class="clonetemplate">
+<div class="row"><span class="date"></span><span class="gas data"></span><span class="T1 data"></span><span class="T2 data"></span><span class="T3 data"></span></div>
+</div>
+<div id="limits"></div>
+<form name="meterform">
+<!--div class="row"><select		name="from"></select><select		name="to"></select></div-->
+</form>
+<div id="data" style="display:table;">
+	<div id="tots"></div>
+	<div id="rows"></div>
+</div>
+<script type="text/javascript">
+(court=>{
+var	 PRICES=[0,7.72,5.58,1.43,4.63]
+,MMM=['Октябрь'	,'Ноябрь'	,'Декабрь'	,'Январь'	,'Февраль'	,'Март'	,'Апрель'	]
+,VVV=[7998		,11010		,16492		,15004		,15988		,14012	,6990		];
+((limits,row)=>{limits.appendChild(row(MMM));
+				limits.appendChild(row(VVV));
+})(	 id$('limits')
+	,arg=>(row=>(row.classList.add('row'),arg.reduce((row,vv)=>(row.appendChild(Object.assign(document.createElement('span'),{'textContent':vv})),row),row)))(document.createElement('div')));
+
+var	 cline=(rows,cl)=>(row=>(rows.appendChild(row),cl&&row.classList.add(cl),row))(tmp.cloneNode(true))
+	,writeLn=(row,ln,dt)=>{ln=ln||new Array(5).fill('');(function(sel,vv){row.querySelector(sel).textContent=vv;return arguments.callee})
+		('.date',(dt||(d=>d))(ln[0]))//dt?dt(ln[0]):ln[0]
+		('.gas',ln[1])
+		('.T1',ln[2])
+		('.T2',ln[3])
+		('.T3',ln[4]);return row}
+	,tmp=document.querySelector('.clonetemplate').children[0]
+	,tot$=id$('tots')
+	,row$=id$('rows');
+writeLn(cline(tot$,'tariffs'),PRICES,dd=>'Тарифы:');
+		cline(tot$,'custom');
+		cline(tot$,'sum');
+writeLn(cline(tot$,'title'),['ДАТА','ГАЗ','T1','T2','T3']);
+
+(form=>{var elel=form.elements,ft$=[elel['to'],elel['from']]
+court.fetchTEXT('meters').then(
+	 lines=>{var selection=[];
+	(lines||'').split('\n').reverse().slice(1).forEach(ln=>{
+		var lns=ln.split(',');
+		((row,cl)=>row.addEventListener('click',_=>(list=>{
+			if(list.contains(cl)){
+					writeLn(tot$.querySelector('.custom'))
+					writeLn(tot$.querySelector('.sum'))
+					selection.pop();
+					list.remove(cl)
+			}else{	list.add(cl);
+					if(selection.push({'row':row,'data':lns})>2){
+						selection[0].row.classList.remove(cl);
+						selection=selection.slice(1)
+					};
+					if(selection.length==2)
+					((tt,dd)=>{dd=selection[0].data.map((ff,ii)=>Math.abs(+tt[ii]-ff));
+					writeLn(tot$.querySelector('.custom'),dd,dd=>'за '+Math.floor(dd/DD.ONEHOUR)+' часов ('+Math.floor(dd/DD.ONEDAY)+' суток(-ки)):');
+					writeLn(tot$.querySelector('.sum'),dd.map((vv,ii)=>Math.floor(vv*PRICES[ii])),dd=>'Стоимость:');
+					})(selection[1].data);
+			}
+		})(row.classList)))(writeLn(cline(row$),lns,toDateString),'selected')
+		//ft$.forEach(el=>el.appendChild(Object.assign(document.createElement('option'),{'textContent':toDateString(lns[0]),'value':ln})));
+	});
+	(evt=>[row$.children[0],row$.children[1]].forEach(row=>row.dispatchEvent(evt)))(new MouseEvent('click',{'bubbles':true,'cancelable':true,'view':window}));
+	//ft$.forEach((el,ii)=>el.selectedIndex=ii);
+	//changePeriod();
+	}
+	,err=>dialogs.message(err,el=>el.innerHTML='Произошла ошибка,<br/>попробуйте перегрузить страницу')
+);
+//ft$.forEach(el=>el.addEventListener('change',changePeriod));
+	
+
+var changePeriod=_=>{
+var  $$=row$.children
+	,tt=elel['to'].value.split(',')
+	,dd=elel['from'].value.split(',').map((ff,ii)=>Math.abs(+tt[ii]-ff));
+q$$('.selected',row=>row.classList.remove('selected'),row$);
+[$$[ft$[0].selectedIndex],$$[ft$[1].selectedIndex]].forEach(row=>row.classList.add('selected'));
+writeLn(tot$.querySelector('.custom'),dd,dd=>'за '+Math.floor(dd/60/60/1000)+' часов ('+Math.floor(dd/24/60/60/1000)+' суток(-ки)):');
+writeLn(tot$.querySelector('.sum'),dd.map((vv,ii)=>Math.floor(vv*PRICES[ii])),dd=>'Стоимость:');
+}
+,DD=new Day()
+,toDateString=vv=>new Date(vv-new Date().getTimezoneOffset()*60*1000).toISOString().slice(0,-8)
+,dialogs=court.dialogs=court.initDialogs()
+
+})(document.meterform);
+
+})(window.crt||(window.crt={}));
+</script>
+</body></html>
