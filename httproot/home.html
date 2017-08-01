@@ -28,9 +28,9 @@
 <iframe name="page" style="display:table-cell;width:100%;height:100%;border:none;"></iframe>
 </div></div>
 <script>
-(page=>(loadTimeTable=>{
-	loadTimeTable({'target':{'value':document.querySelector('option:checked').value}});
-	document.getElementById('room').addEventListener('change',loadTimeTable);
-})(evt=>{page.src='sroot/week.table.html?room='+evt.target.value}))(document.querySelector('iframe[name=page]'))
+((page,href)=>{
+	page.src=location.href.split('state=')[1]||(href+document.querySelector('option:checked').value);
+	document.getElementById('room').addEventListener('change',evt=>{page.src=href+evt.target.value});
+})(document.querySelector('iframe[name=page]'),'sroot/week.table.html?room=')
 </script>
 </body></html>
