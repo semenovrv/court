@@ -13,6 +13,7 @@ var	 sstatic	=	require('serve-static')
 	,cookieLn	=	require('cookie').serialize
 	,Session	=	require('express-session')
 	,SQLiteStore=	require('connect-sqlite3')(Session)
+	,debug=process.argv[2]
 ,WWW=((root,sroot,name,port)=>{
 function UserGroup(uuu){var self=Object.assign(this,{
  'uids':uuu||[]
@@ -36,7 +37,7 @@ return{
 	,'trust':		new UserGroup(['nkholin.kmt@gmail.com','vs@chemical-block.com.com'])
 	,'guest':		new UserGroup()
 }
-}})('/httproot','/sroot',process.argv[2]||'court-174506.appspot.com',8080)
+}})('/httproot','/sroot',debug||'court-174506.appspot.com',8080)
 ,GOOGLE={
 'qauth':{
  'response_type':	'code'
@@ -111,7 +112,7 @@ return{
 //	.use('/css/',sstatic(path.join(WWW.root.dir,'/css')))
 //	.use('/pic/',sstatic(path.join(WWW.root.dir,'/pic')))
 );
-function userAccess(req,res,next){
+function userAccess(req,res,next){if(debug)return next()
 var  obj,sess=req.session
 	,usr=sess&&sess.user;
 	//,opts=sess?{'path':sess.cookie.path,'expires':sess.cookie.expires}:{'path':WWW.sroot.path,'maxAge':0};
