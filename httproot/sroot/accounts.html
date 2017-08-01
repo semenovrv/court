@@ -1,0 +1,169 @@
+<!DOCTYPE html />
+<html>
+<head>
+<meta charset="UTF-8"/>
+	<script src="js/dialogs.js"></script>
+	<script src="js/main.js"></script>
+<link href="css/main.css"	type="text/css" rel="stylesheet"/>
+<style>
+	.row>input,
+	.row select,
+	.row textarea,
+	.row .cell{display:table-cell;vertical-align:top;}
+	
+	.button{display:table-cell;
+		border:1px solid green;
+		padding:0.2em;
+		margin:0.2em;
+		color:blue;
+		width:4em;
+		white-space: nowrap;
+		background-color:#dddddd;
+		}
+	.button:hover{background-color:#eeeeee;border:1px solid yellow;cursor:pointer;}
+	
+	div.row.pos:hover{background-color:#ccffcc;}
+	div.row.neg:hover{background-color:#ffcccc;}
+	div.pos{background-color:#eeffee;}
+	div.neg{background-color:#ffeeee;}
+
+div.row
+,#rows>*
+,#tots>*		{display:table-row}
+
+ #rows>*>span
+,#tots>*>span	{display:table-cell;border-bottom:1px dashed grey;}
+
+ #tots			{font-weight: bold;font-size:larger;}
+ #tots>*>span	{padding-top:.3em;padding-bottom:.3em;}
+
+	
+	.date{font-style:  italic; padding-right:1em; white-space:nowrap;}
+	.rowin,.rowout{font-family:  Courier, monospace;text-align:right;padding-right:1em;}
+	.source{font-size:smaller;padding-right:1em;color:gray;}
+	.notes{font-family:Arial, Helvetica, sans-serif;}
+	
+	.rvcheck{border:1px solid red;padding:0.2em;}
+
+	.totsel	{background-color:#ffff88;}	
+</style>
+</head><body class="loading">
+<form name="ctlform">
+<div class="row">
+<input		name="from"	type="date" inputmode="numeric" placeholder="дата"/>
+<input		name="to"	type="date" inputmode="numeric" placeholder="дата"/>
+<select				name="table">
+	<option value="tennis">	расчет по корту	</option>
+	<option value="hall">	расчет по залу	</option>
+</select>
+</div>
+
+<div style="display:table;">
+<div class="row">
+<label class="button"><input	name="virt"	type="checkbox" checked />безнал</label>
+<label class="button"><input	name="real"	type="checkbox" checked />нал</label>
+<label class="button"><input	type="checkbox" value="8" class="cbtype"/>имущество</label>
+<label class="button"><input	type="checkbox" value="3" class="cbtype"/>ремонт</label>
+<label class="button"><input	type="checkbox" value="7" class="cbtype"/>расходники</label>
+<label class="button"><input	type="checkbox" value="11" class="cbtype"/>расходы на ЮЛ</label>
+<label class="button"><input	type="checkbox" value="12" class="cbtype"/>зарплата</label>
+<label class="button"><input	type="checkbox" value="1" class="cbtype"/>уборка корты</label>
+<label class="button"><input	type="checkbox" value="2,4" class="cbtype"/>уборка</label>
+</div>
+</div>
+</form>
+<div class="clonetemplate">
+	<div><span class="date"></span><span class="rowin"></span><span class="rowout"></span><span class="source"></span><span class="notes"></span></div>
+</div>
+<div style="display:table;">
+	<div id="rows" 	style="display:table-row-group;"></div>
+	<div id="tots" style="display:table-row-group;"></div>
+</div>
+<script>
+(court=>{(function(form,printRows){
+function Period(){Object.assign(this,{
+ 'from':	elstamp(elel['from'])
+,'to':		elstamp(elel['to'])+60*60*24*1000
+})}
+var  elel=form.elements,DD=new Day()
+,elstamp=el=>new Date(el.value).valueOf()+(new Date().getTimezoneOffset())*60*1000
+,fetchBalance=_=>((table,period)=>(isNaN(period.from)||isNaN(period.to))
+	?Promise.reject('empty period')
+	:(pp=>(pp&&(pp=parent.court)&&(pp=pp.accounts)&&(pp=pp.update)&&pp(period)
+		,court.fetchJSON({'db':'accounts','statement':'select*from '+table+' where date >= '+period.from+' and date < '+period.to+' order by date desc'})
+	))(parent!=window)
+	)(elel['table'].value,new Period());
+	
+// init controls //
+(opts=>{var	 now=opts.now?new Date(opts.now):new Date(),mm=now.getMonth(),yy=now.getFullYear();
+[Object.assign(elel['from'],{'value':DD.localDayString(opts.from?new Date(+opts.from)	:new Date(yy,mm))})
+,Object.assign(elel['to'],	{'value':DD.localDayString(opts.to	?new Date(+opts.to)		:new Date(yy,mm+1))})
+,Object.assign(elel['table'],{'value':opts.table||'tennis'})
+].forEach(el=>el.addEventListener('change',_=>fetchBalance().then(rr=>{printRows(rr);hApplyFilter()})))
+})(getQueryParameters());
+
+Promise.all([court.fetchJSON({'statement':'select*from lessons join customers using(cust_id) join subjects using(subj_id)'}).then(dd=>court.sources=dd),fetchBalance()])
+	.then(aaa=>aaa[1])
+	.then(rr=>{printRows(rr);hApplyFilter()});
+	
+(setTitle=>{elel['table'].addEventListener('change',setTitle);setTitle()})
+	(_=>(sel=>document.title=sel.options[sel.selectedIndex].text+' за '+elel['from'].value+' - '+elel['to'].value)(elel['table']));
+
+
+var hApplyFilter=_=>((row$,cv,cr,table)=>{
+court.fetchJSON({	'db':'accounts'
+	,'statement':'select sum(income) total from '+table+' where ((date<'+elstamp(elel['from'])+')'+(cr?(cv?'':'and not virt'):(cv?'and virt':''))+')'}
+	,'sqlite3get').then(row=>(vv=>setIncome(setRowClass(cline(tot$,'баланс на начало периода'),vv),vv).classList.add('totall'))(row.total||0))
+var	 sum={'in':0,'out':0};
+(tot$.querySelector('.totall')||{'remove':_=>{}}).remove();
+court.rows.forEach(rr=>{var lv=rr.virt,vv=+rr.income;rr.row.style.display=(cv&&lv||cr&&!lv)?((vv<0?(sum.out+=vv):(sum.in+=vv)),'table-row'):'none'});
+(row=>		setIncome(row,sum.in)	)(tot$.querySelector('.totin'));
+(row=>		setIncome(row,sum.out)	)(tot$.querySelector('.totout'));
+((row,dd)=>{setIncome(row,dd=sum.in+sum.out);setRowClass(row,dd).classList.remove('pos','neg')})(tot$.querySelector('.totdif'));
+court.calcSelected()
+})(row$,elel['virt'].checked,elel['real'].checked,elel['table'].value);
+
+['virt','real'].forEach(nn=>elel[nn].addEventListener('change',hApplyFilter));
+q$$('.cbtype',el=>el.addEventListener('change',function(){
+	var act=this.checked?'on':'off';
+	this.value.split(',').forEach(cl=>dialogs[act](selClass(cl)))
+	court.calcSelected();
+}));
+
+})(document.ctlform,rows=>{row$.innerHTML=tot$.innerHTML='';var css=new Set();
+	(court.rows=rows||[]).forEach(rr=>{var row=rr.row=cline(row$);
+		(less=>less&&(	row.querySelector('.source').textContent=	less.lastname))(court.sources.find(ss=>ss.less_id==rr.less_id));
+						row.querySelector('.date').textContent=		localDayString(new Date(rr.date));
+						row.querySelector('.notes').textContent=	rr.notes;
+		setIncome(setRowClass(row,rr.income),rr.income);
+		if(rr.type)['.rowin','.rowout'].forEach(sel=>addTypeClass(row.querySelector(sel),css,rr.type))
+	});
+	if(css.size)addTypeCSS(css);
+	setRowClass(cline(tot$,'доход'),+1)			.classList.add('totin')
+	setRowClass(cline(tot$,'расход'),-1)		.classList.add('totout')
+				cline(tot$,'баланс за период')	.classList.add('totdif')
+				cline(tot$,'расход по отмеченному').classList.add('totsel')
+});
+
+Object.assign(court,{
+ 'css':			new Set()
+,'calcSelected':_=>{var css=new Set();
+		q$$('.cbtype:checked',el=>el.value.split(',').forEach(vv=>css.add(+vv)));
+		(row=>setIncome(row,court.rows.reduce((sum,rr)=>css.has(+rr.type)?(sum+rr.income):sum,0)))(tot$.querySelector('.totsel'));
+	}
+});
+
+var	 row$=id$('rows')
+	,tot$=id$('tots')
+	,dialogs=court.dialogs=court.initDialogs()
+,selClass=val=>'_'+new Number(val)
+,addTypeClass=(el,css,cl)=>{el.classList.add(selClass(cl=+cl));if(!court.css.has(cl)){css.add(cl);court.css.add(cl)}}
+,addTypeCSS=css=>(list=>(rules=>rules.insertRule([...css].map(cl=>(cl=>'body.'+cl+' .'+cl)(selClass(cl)))+'{background-color:#ffff88;}',rules.length-1))(list[list.length-1]))(document.styleSheets)
+,cline=(tmp=>(rr,text)=>(ln=>{rr.appendChild(ln);text&&(ln.querySelector('.notes').textContent=text);return ln})(tmp.cloneNode(true)))(document.querySelector('.clonetemplate').children[0])
+,setRowClass=(row,vv)=>(row.classList.add(vv>0?'pos':'neg'),row)
+,setIncome=(row,vv)=>{row.querySelector(vv<=0?'.rowout':'.rowin').textContent=vv.toLocaleString();return row}
+})(window.crt);
+</script>
+<div>
+</div>
+</body></html>
