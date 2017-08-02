@@ -101,18 +101,18 @@ return{
 	.use('/meters',(req,res)=>{try{send(req,'meter.csv',{'root':__dirname}).pipe(res);}catch(err){res.court.serr(err);}})
 	.use(...GroupMethod('meter'))
 	.use(...GroupMethod('sqlite3insert'))
-	.use(...SQLite('court'))
-	.use(...SQLite('time.table'))
+	//.use(...SQLite('court')).use(...SQLite('time.table'))
+	.use('/data',(...args)=>WWW.groups.admin.includes(args[0].session.user.email)?connect().use(sstatic(__dirname))(...args):(args[1].writeHead(404),args[1].end()))
 	.use(sstatic(WWW.sroot.dir))
 	.use((req,res,next)=>console.log('not served!',req.url,WWW.sroot.dir)||next())
 )
+	.use('/_ah/health',(req,res)=>{res.writeHead(200);res.end()})//gcloud VM health check requests//
 	.use(sstatic(WWW.root.dir,{'index':'home.html'}))
-//	.use('/_ah/health',(req,res)=>{res.writeHead(200);res.end()})//gcloud VM health check requests//
 //	.use('/js/',sstatic(path.join(WWW.root.dir,'/js')))
 //	.use('/css/',sstatic(path.join(WWW.root.dir,'/css')))
 //	.use('/pic/',sstatic(path.join(WWW.root.dir,'/pic')))
 );
-function userAccess(req,res,next){if(debug)return next()
+function userAccess(req,res,next){if(debug){req.session.user={'email':WWW.groups.admin.uids[0]};return next()}
 var  obj,sess=req.session
 	,usr=sess&&sess.user;
 	//,opts=sess?{'path':sess.cookie.path,'expires':sess.cookie.expires}:{'path':WWW.sroot.path,'maxAge':0};
@@ -130,10 +130,12 @@ if(!res.court.error&&(usr||{}).email&&GroupMethod('guest')[1](req,0,()=>console.
 function GroupMethod(mm){var GG;return['/'+mm,(...aaa)=>
 	Object.keys(WWW.groups).some(gg=>(GG=WWW.groups[gg]).methods[mm]&&GG.includes(aaa[0].session.user.email))?GG.methods[mm](...aaa):aaa[2]()
 ];}
+/*
 function SQLite(db){return[
-	 '/'+(db=db+'.sqlite')
+	 '/data/'+(db=path.basename(parseurl(req).pathname))//(db=db+'.sqlite')
 	,(req,res)=>WWW.groups.admin.includes(req.session.user.email)?send(req,db,{'root':__dirname}).pipe(res):(res.writeHead(404),res.end())
 ];}
+*/
 
 (sql=>{
 Object.assign(WWW.groups.admin.methods,{
