@@ -29,7 +29,7 @@ return{
 ,'sroot':	{'path':sroot,'dir':path.join(root.dir,sroot)}
 ,'login':	'/login.html'
 ,'gmail':	(gg=>Object.assign(gg,{'obj':{'pathname':path.join(sroot,gg.login)},'callback':'/auth/google/callback'}))({'login':'/auth/google/login'})
-,'url':		{'slashes':true,'protocol':'https','hostname':name}//{'slashes':true,'protocol':'http','hostname':name,'port':port}
+,'url':		Object.assign(debug&&(name==='localhost')?{'port':port,'protocol':'http'}:{'protocol':'https'},{'slashes':true,'hostname':name})//{'slashes':true,'protocol':'http','hostname':name,'port':port}
 //,'UserGroup':UserGroup
 ,'groups':	{
 	 'admin':		new UserGroup(['semenovrv@gmail.com'])
@@ -108,7 +108,7 @@ return{
 	.use('/_ah/health',(req,res)=>{res.writeHead(200);res.end()})//gcloud VM health check requests//
 	.use(sstatic(WWW.root.dir,{'index':'home.html'}))
 );
-function userAccess(req,res,next){if(debug){req.session.user={'email':WWW.groups.admin.uids[0]};return next()}
+function userAccess(req,res,next){if(debug&&(WWW.name==='localhost')){req.session.user={'email':WWW.groups.admin.uids[0]};res.court.error=true}
 var  obj,sess=req.session
 	,usr=sess&&sess.user;
 	//,opts=sess?{'path':sess.cookie.path,'expires':sess.cookie.expires}:{'path':WWW.sroot.path,'maxAge':0};
@@ -120,7 +120,7 @@ if(!res.court.error&&(usr||{}).email&&GroupMethod('guest')[1](req,0,()=>console.
 		//obj=Object.assign({},WWW.gmail.obj);
 		//Object.assign(obj.query||(obj.query={}),res.court.newState(res.court.state));
 		//res.court.redirect(obj);
-		res.court.redirect({'pathname':path.join(WWW.sroot.path,WWW.login),'query':Object.assign(res.court.newState(res.court.state),{'login':WWW.gmail.login})});
+		res.court.redirect({'pathname':path.join(WWW.sroot.path,'/auth',WWW.login),'query':Object.assign(res.court.newState(res.court.state),{'login':path.join(WWW.sroot.path,WWW.gmail.login)})});
 }}
 
 function GroupMethod(mm){var GG;return['/'+mm,(...aaa)=>
