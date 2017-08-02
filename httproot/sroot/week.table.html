@@ -399,12 +399,19 @@ var opt=sel.querySelector('option:checked');
 
 
 court.setSideMenu(sw);
+(()=>{var pt=null;
+document.addEventListener('touchstart',evt=>{pt=new Pt(evt)},false);
+document.addEventListener('touchmove', evt=>{if(pt&&(Math.abs(pt.sub(evt).x)>Math.abs(pt.y))){
+	sw[pt.x<0?'left':'right'].style.display='flex';
+	pt=null;                                             
+}},false);
+function Pt(evt){var touch=evt=>evt.touches[0]
+	,tt=touch(evt)
+	,self=Object.assign(this,{'x':tt.clientX,'y':tt.clientY,'sub':evt=>{self.x-=(tt=new Pt(evt)).x;self.y-=tt.y;return self}})
+}})();
 
 })(new Date(),court.Day,table.querySelector('.clonetemplate>div:first-child')))(document.body.querySelector('.table'));
 })(window.crt||{});
-
-
-
 
 /*
 ((input,div,cdiv,sel)=>{
