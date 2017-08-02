@@ -7,24 +7,25 @@ function child$(pp,fn){return [].forEach.call(pp.children,fn)}
 //function _2json(res){try{res=res.json()}catch{}finally{return res}}
 ((crt,_2json,PP)=>Object.assign(crt,{
  'params':		ppp=>Object.keys(ppp).map(pp=>encodeURIComponent(pp)+'='+encodeURIComponent(ppp[pp])).join('&')
-,'fetchTEXT':	(meth,err)=>
-	fetch(meth,{'credentials':'same-origin'}) //'headers':{'Accept':'text/plain','Content-Type':'text/plain'},
-		.then(res=>((err=!res.ok),res)).then(function(res){var ret;try{ret=res.text().catch(err=>res)}catch(e){ret=res}finally{return ret}})
-		.then(res=>PP(err,res))
-,'fetchJSON':	(ppp,meth,err)=>
-	fetch((meth||'sqlite3all')+'?'+crt.params(ppp),{'credentials':'same-origin'})
-		.then(res=>((err=!res.ok),res)).then(_2json)
-		.then(res=>PP(err,res))
-,'postJSON':	(body,err)=>(PIN=>PIN&&(body.PIN=PIN))(crt.getPIN())
-	?fetch('sqlite3insert',{'headers':{'Accept':'application/json','Content-Type':'application/json'},'credentials':'same-origin','method':'POST','body':JSON.stringify(body)})
-		.then(res=>((err=!res.ok),res)).then(_2json).then(res=>PP(err,res))
-	:PP({'message':'Wrong PIN!'})
-,'postText':	(meth,body,err)=>(PIN=>PIN&&(body.PIN=PIN))(crt.getPIN())
-	?fetch(meth+'?'+crt.params(body),{'headers':{'Accept':'application/json','Content-Type':'application/json'},'credentials':'same-origin'})
-		.then(res=>((err=!res.ok),res)).then(_2json).then(res=>PP(err,res))
-	:PP({'message':'Wrong PIN!'})
-,'getPIN':	_=>(pin=>(pin&&pin.length)?pin:(localStorage.setItem('PIN',pin=prompt('Введите PIN')),pin))(localStorage.getItem('PIN'))
-,'rmPIN':	_=>{localStorage.removeItem('PIN')}
+,'fetchTEXT':	(meth,err)=>		fetch(meth,{'credentials':'same-origin'})
+	.then(res=>((err=!res.ok),res)).then(function(res){var ret;try{ret=res.text().catch(err=>res)}catch(e){ret=res}finally{return ret}})
+	.then(res=>PP(err,res))
+,'fetchJSON':	(ppp,meth,err)=>	fetch((meth||'sqlite3all')+'?'+crt.params(ppp),{'credentials':'same-origin'})
+	.then(res=>((err=!res.ok),res)).then(_2json)
+	.then(res=>PP(err,res))
+,'postJSON':	(body,err)=>		fetch('sqlite3insert',{
+	 'headers':		{'Accept':'application/json','Content-Type':'application/json'}
+	,'credentials':	'same-origin'
+	,'method':		'POST'
+	,'body':JSON.stringify(body)
+}).then(res=>((err=!res.ok),res)).then(_2json).then(res=>PP(err,res))
+,'postText':	(meth,body,err)=>	fetch(meth+'?'+crt.params(body),{
+	 'headers':		{'Accept':'application/json','Content-Type':'application/json'}
+	,'credentials':	'same-origin'
+}).then(res=>((err=!res.ok),res)).then(_2json).then(res=>PP(err,res))
+	
+//,'getPIN':	_=>(pin=>(pin&&pin.length)?pin:(localStorage.setItem('PIN',pin=prompt('Введите PIN')),pin))(localStorage.getItem('PIN'))
+//,'rmPIN':	_=>{localStorage.removeItem('PIN')}
 }))(window.crt||(window.crt={})
 	,function(res){var ret;try{ret=res.json().catch(err=>res)}catch(e){ret=res}finally{return ret}}
 	,(err,res)=>Promise[err?'reject':'resolve'](res));
