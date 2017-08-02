@@ -1,0 +1,56 @@
+<!DOCTYPE html />
+<html>
+<head>
+<meta charset="UTF-8"/>
+<meta name="HandheldFriendly" content="true" />
+<script src="/js/dialogs.js"></script>
+<script src="/js/main.js"></script>
+<script>document.addEventListener('DOMContentLoaded',()=>{
+var	 end=id$('t3')
+	,elel=id$('form')
+	,dialogs=crt.initDialogs()
+	,send=()=>crt.postText('meter',{'val':[new Date().valueOf()].concat(['gas','t1','t2','t3'].map(id=>id$(id).value))})
+		.then(()=>location='metvals.html',err=>dialogs.on('failed').message(el=>el.innerHTML=err.message||JSON.stringify(err)))
+	id$('submit').addEventListener('click',send);
+	document.addEventListener('keydown',evt=>{switch(evt.key){
+		case'Enter':(elel[[].indexOf.call(elel,evt.target)+1]||end).focus()
+		case'Tab':	if(evt.target===end){event.preventDefault();send()};
+	}});
+});
+</script>	
+<link href="/css/main.css"	type="text/css" rel="stylesheet"/>
+<style>
+	input{width:100%;}
+	.button{
+		text-align:center;
+		border:1px solid green;
+		color:blue;
+		background-color:#dddddd;
+		border-radius:1em;
+		padding-left:.5em;
+		padding-right:.5em;
+		}
+	.button:hover{background-color:#eeeeee;border:1px solid yellow;cursor:pointer;}
+	#formdiv{
+		align-items:	center;
+		justify-content:center;
+		overflow:auto;
+		width:100%;
+	}
+	.button,input{font-size:16vmin;font-family:	Courier, monospace;}
+	#formdiv,body{margin:0;padding:0;border:none;border-radius:0;}
+</style>
+<base href="/sroot/"/>
+</head><body>
+<form id="form"><div id="formdiv"  class="dialog">
+<input		id="gas"	type="number" inputmode="numeric" placeholder="газ" autofocus/>
+<input		id="t1"		type="number" inputmode="numeric" placeholder="T1"/>
+<input		id="t2"		type="number" inputmode="numeric" placeholder="T2"/>
+<input		id="t3"		type="number" inputmode="numeric" placeholder="T3"/>
+<span id="submit" class="button">послать</span>
+</div></form>
+<div id="message"  class="bg"><div class="dialog">
+	<h1 class="err title">ERROR!</h1>
+	<h3 name="message"></h3>
+</div></div>
+</body></html>

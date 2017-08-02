@@ -1,0 +1,118 @@
+<!DOCTYPE html />
+<html>
+<head><title>Добавить расходы/взносы</title>
+<meta charset="UTF-8"/>
+<script src="/js/dialogs.js"></script>
+<script src="/js/main.js"></script>
+<link href="/css/main.css"	type="text/css" rel="stylesheet"/>
+<style>
+	html,body{height:100%;width:100%;margin:0;padding:0;}
+	.mrow{width:100%;display:flex;flex-direction:column;}
+	.mrow>div{display:flex;flex-direction:row;}
+	
+	.button{display:table-cell;
+		border:1px solid green;
+		color:blue;
+		width:4em;
+		white-space: nowrap;
+		background-color:#dddddd;
+		}
+	.button:hover{background-color:#eeeeee;border:1px solid yellow;cursor:pointer;}
+	
+</style>
+</head><body class="loading">
+<form name="inputform" method="get" style="display:table;">
+<div class="mrow">
+<div>	
+	<input	name="date"		class="store"	type="date" placeholder="дата"/>
+	<select	name="table">
+		<option value="tennis" selected>	корт</option>
+		<option value="hall">	зал</option>
+	</select>
+</div>
+
+<div><textarea	name="notes"	class="store sccell" style="display:table-row;" placeholder="комментарии" cols="40" rows="4"></textarea></div>
+
+<div>
+<select		name="less_id"	class="store sccell">
+	<option disabled selected value>выбрать источник дохода</option>
+	<option style="color:red;" value>не выбирать</option>
+</select>
+</div>
+
+<div>
+	<select	name="type" 	class="store"><option disabled selected value>выбрать тип расходов</option><option style="color:red;" value>не выбирать</option></select>
+	<input	name="income"	class="store"	type="number"  placeholder="сумма"/>
+	<label class="button">
+	<input	name="virt"		class="store"	type="checkbox" value="0"/>б/нал
+	</label>
+	<span class="button" id="add">добавить</span>
+</div>
+</div>
+</form>
+
+
+<div class="mrow"><div><iframe id="accounts" src="accounts.html" style="width:100%;height:100%;border:none;"></iframe></div></div>
+
+<div id="message"  class="bg"><div class="dialog">
+	<h1 class="err title">ERROR!</h1>
+	<h3 name="message"></h3>
+</div></div>
+
+<div id="error"  class="bg"><div class="dialog">
+	<h1 class="err title">ERROR!</h1>
+	<h3 name="message"></h3>
+</div></div>
+
+
+<script>
+
+/*
+fetch('/sqlite3insert',{'headers':{'Accept':'application/json','Content-Type':'application/json'},'method':'POST'
+		,'body':JSON.stringify(Object.assign({'db':db,'statement':'insert into '+table+'("'+nnn.join('","')+'")values('+Narray(nnn,'?').join(',')+')','values':vvv},{'refresh':refresh}))})
+*/
+((court,form)=>{
+var	 elel=form.elements
+,dialogs=court.dialogs=court.initDialogs()
+,getOptsHandler=(id,text)=>(el=>(dd=>dd.forEach(oo=>el.appendChild(Object.assign(document.createElement('option'),{'value':oo[id],'textContent':text(oo)})))))(elel[id])
+,errOptsHandler=err=>dialogs.on('failed').message(el=>el.textContent=err.message||JSON.stringify(err))
+
+Promise.all([
+court.fetchJSON({'db':'accounts','statement':'select*from types'})
+	.then(getOptsHandler('type',oo=>oo.title),errOptsHandler),
+court.fetchJSON({'statement':'select*from lessons join customers using(cust_id) join subjects using(subj_id)'})
+	.then(getOptsHandler('less_id',oo=>oo.lastname+' '+oo.name+' ('+oo.title+')'),errOptsHandler)
+]).then(dialogs.off('loading'));
+		
+(iframe=>Object.assign(court,{'accounts':{
+ 'iframe':	iframe
+,'src':		iframe.src
+,'update':function(period){this.period=Object.assign({},period)}
+,'period':{}
+}}))(id$('accounts'));	
+
+var	 DD=new Day();
+(el=>{	el.value=DD.localDayString(new Date());
+		el.addEventListener('change',_=>court.accounts.src=court.accounts.iframe.src='accounts.html?'+court.params({'now':el.value}))
+})(elel['date']);
+
+id$('add').addEventListener('click',_=>{
+var	 pp={'table':elel['table'].value}
+	,store=q$('.store',form)
+	,data={},names=new Array(store.length);[].forEach.call(store,(el,ii)=>data[names[ii]=el.name]=el.value||null);
+
+Object.assign(data,{
+ 'date':	DD.localDayStart(elel['date'].value)
+,'virt':	elel['virt'].checked?1:0}
+,data['type']?{'income':-Math.abs(data.income)}:{}
+,data['less_id']?{'income':Math.abs(data.income)}:{});
+((nnn,vvv,fn)=>
+(fn=_=>court.postJSON({'db':'accounts','statement':'insert into '+pp.table+'('+nnn+')values('+new Array(nnn.length).fill('?')+')','values':vvv})
+	.then(dd=>dialogs.off('loading')||(court.accounts.iframe.src=court.accounts.src+'?'+court.params(Object.assign(pp,court.accounts.period)))
+		,err=>dialogs.off('loading')||court.rmPIN()||dialogs.message(err,(el,msg)=>el.innerHTML=msg+'<br/>'+'Попробуйте еще раз!').then(_=>Promise.reject(err)))
+	.catch(fn))()
+)(names.map(nn=>'"'+nn+'"'),[names.map(nn=>data[nn])]);
+});
+})(window.crt,document.inputform);
+</script>	
+</body></html>
