@@ -17,8 +17,8 @@ var	 sstatic	=	require('serve-static')
 ,WWW=((root,sroot,name,port)=>{
 function UserGroup(uuu){var self=Object.assign(this,{
  'uids':uuu||[]
-,'methods':{'guest':_=>console.log(_.session)||self}
-,'includes':uid=>console.log('includes',uid,self.uids.some(id=>uid===id))||self.uids.some(id=>uid===id)
+,'methods':{'guest':()=>self}
+,'includes':uid=>self.uids.some(id=>uid===id)
 })}
 return{
  'name':	name
@@ -59,7 +59,6 @@ return{
 	,oauth2Client = new google.auth.OAuth2(GOOGLE.qauth.client_id,GOOGLE.web.client_secret,GOOGLE.qauth.redirect_uri)
 	,http		=	require('http').Server(connect()
 	.use(WWW.sroot.path,connect()
-	.use((req,res,next)=>console.log('url',req.url)||next())
 	.use((req,res,next)=>{
 		req.query=~req.url.indexOf('?')?qs.parse(parseurl(req).query):{};
 		res.court={	 'writeHead':	function(){res.writeHead('200',{'Content-Type':mime.lookup('json')});return res;}
@@ -74,7 +73,7 @@ return{
 										res.end();
 										return res;}
 					,'newState':	(state,nodef)=>{return{'state':state||req.query.state||!nodef&&req.originalUrl};}
-					};console.log(req.url)
+					};
 		next();
 		})
 	.use(WWW.gmail.login,(req,res)=>console.log('googlogin')||res.court.redirect(
@@ -88,7 +87,7 @@ return{
 			(res.court.error=err)
 				?next()
 				:(Object.assign(req.session,{'user':usr={'email':usr.emails[0].value}})
-					,userAccess(req,res,_=>console.log('GOOGLE USER',usr)||res.court.redirect({'pathname':req.query.state})))
+					,userAccess(req,res,()=>res.court.redirect({'pathname':req.query.state})))
 	 )))
 	.use('/auth',sstatic(path.join(WWW.sroot.dir,'auth')))
 	.use(userAccess)
@@ -108,9 +107,6 @@ return{
 )
 	.use('/_ah/health',(req,res)=>{res.writeHead(200);res.end()})//gcloud VM health check requests//
 	.use(sstatic(WWW.root.dir,{'index':'home.html'}))
-//	.use('/js/',sstatic(path.join(WWW.root.dir,'/js')))
-//	.use('/css/',sstatic(path.join(WWW.root.dir,'/css')))
-//	.use('/pic/',sstatic(path.join(WWW.root.dir,'/pic')))
 );
 function userAccess(req,res,next){if(debug){req.session.user={'email':WWW.groups.admin.uids[0]};return next()}
 var  obj,sess=req.session
