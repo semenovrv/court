@@ -157,7 +157,6 @@ div.halfs>*{flex-basis:50%;text-align: center;}
 		<div class="timelines"></div>
 	</div>
 	<div id="swmenu" class="row sw">
-		<span class="bbutton" id="forget">забыть PIN</span>
 		<span><input id="print"	type="number"	placeholder="print zoom" min="20" max="200" value="80"/></span>
 	</div>
 	<div style="left:0;"	id="swleft"	class="sw vsw"><span class="celltime"><a name="from"></a>-<a name="to"></a></span></div>
@@ -181,14 +180,15 @@ if('wday'in court.dates){
 	court.wdays.children[court.dates.wday].classList.add('today');
 }
 
-(function(sw,eld){
+(function(side,eld){
 var  mon=new Date(court.dates.monday).setDate(eld)
 	,sun=new Date(court.dates.monday).setDate(eld+6)
-	sw.querySelector('a[name=from]').innerHTML=DD.shortDate(mon);
-	sw.querySelector('a[name=to]').innerHTML=DD.shortDate(sun);
-	sw.addEventListener('click',_=>court.reload(hname,mon));
+	,el=sw[side];
+	el.querySelector('a[name=from]').innerHTML=DD.shortDate(mon);
+	el.querySelector('a[name=to]')	.innerHTML=DD.shortDate(sun);
+	el.addEventListener('click',sw.swipe[side]=_=>court.reload(hname,mon));
 return arguments.callee;
-})(sw.left,court.dates.mondate-7)(sw.right,court.dates.mondate+7);
+})('left',court.dates.mondate-7)('right',court.dates.mondate+7);
 	hall.fetchJSON(hname,elel,['table','cloneTimeLine','dates'].reduce((oo,pp)=>((oo[pp]=court[pp]),oo),{}))
 		.then(tt=>{
 			tt.forLine((ln,ll)=>{var from;ln.forEach(tc=>{
@@ -356,7 +356,7 @@ return TimeTable;
 })(court.TimeTable);
 
 
-var	 sw={'left':id$('swleft'),'right':id$('swright'),'top':id$('swmenu')}
+var	 sw=court.Swipe({'left':id$('swleft'),'right':id$('swright'),'top':id$('swmenu')})
 	,query=getQueryParameters();
 	
 
@@ -399,16 +399,6 @@ var opt=sel.querySelector('option:checked');
 
 
 court.setSideMenu(sw);
-(()=>{var pt=null;
-document.addEventListener('touchstart',evt=>{pt=new Pt(evt)},false);
-document.addEventListener('touchmove', evt=>{if(pt&&(Math.abs(pt.sub(evt).x)>Math.abs(pt.y))){
-	sw[pt.x<0?'left':'right'].style.display='flex';
-	pt=null;                                             
-}},false);
-function Pt(evt){var touch=evt=>evt.touches[0]
-	,tt=touch(evt)
-	,self=Object.assign(this,{'x':tt.clientX,'y':tt.clientY,'sub':evt=>{self.x-=(tt=new Pt(evt)).x;self.y-=tt.y;return self}})
-}})();
 
 })(new Date(),court.Day,table.querySelector('.clonetemplate>div:first-child')))(document.body.querySelector('.table'));
 })(window.crt||{});

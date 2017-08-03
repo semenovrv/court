@@ -42,7 +42,6 @@
 	<div class="timelines"></div>
 	</div>
 	<div id="swmenu" class="row sw">
-		<span class="bbutton" id="forget">забыть PIN</span>
 		<span><input id="print"	type="number"	placeholder="print zoom" min="20" max="200" value="80"/></span>
 		<span><input id="date"	type="date"		placeholder="дата"/></span>
 	</div>
@@ -95,7 +94,7 @@ Object.assign(court.TimeTable.prototype,{
 })(window.crt);
 
 
-var	 sw={'left':id$('swleft'),'right':id$('swright'),'top':id$('swmenu')}
+var	 sw=window.crt.Swipe({'left':id$('swleft'),'right':id$('swright'),'top':id$('swmenu')})
 	,query=getQueryParameters();
 
 
@@ -126,11 +125,11 @@ var	dd={'date':qdate?(new Date(+qdate)):date};
 return dd})(query.date,dt);
 
 ((dt,DD,reload)=>{
-(function(sw,eld){var swd=DD.dayDate(dt,eld);
-	sw.querySelector('a').innerHTML=DD.shortDate(swd);
-	sw.addEventListener('click',_=>reload(swd.valueOf()));
+(function(side,eld){var swd=DD.dayDate(dt,eld),el=sw[side];
+	el.querySelector('a').innerHTML=DD.shortDate(swd);
+	el.addEventListener('click',sw.swipe[side]=_=>reload(swd.valueOf()));
 return arguments.callee;
-})(sw.left,-1)(sw.right,1);
+})('left',-1)('right',1);
 
 (el=>{
 	el.value=DD.localDayString(dt);
