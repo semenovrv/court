@@ -72,22 +72,23 @@ return{
 										res.setHeader('Content-Length','0');
 										res.end();
 										return res;}
-					,'newState':	(state,nodef)=>{return{'state':state||req.query.state||!nodef&&req.originalUrl};}
 					};
 		next();
 		})
 	.use(WWW.gmail.login,(req,res)=>console.log('googlogin')||res.court.redirect(
-		 url.format({'slashes':true,'protocol':'https','hostname':'accounts.google.com','pathname':'/o/oauth2/auth','query':Object.assign({},GOOGLE.qauth,res.court.newState())})))
+		 url.format({'slashes':true,'protocol':'https','hostname':'accounts.google.com','pathname':'/o/oauth2/auth'
+					,'query':Object.assign({'state':req.query.state},GOOGLE.qauth)})))
 	.use(session)
 	.use('/logout',(req,res)=>req.session.destroy(()=>{res.writeHead(304);res.end();}))
 	.use(WWW.gmail.callback,(req,res,next)=>oauth2Client.getToken(req.query.code,(err,tokens)=>// GOOGLE reply is redirected always//
-		(Object.assign(res.court,res.court.newState(null,true)).error=err)
+		(Object.assign(res.court,{'state':req.query.state}).error=err)
 			?next()
 			:google.plus('v1').people.get({'userId':'me','auth':(oauth2Client.setCredentials(tokens),oauth2Client)},(err,usr)=>
 			(res.court.error=err)
 				?next()
-				:(Object.assign(req.session,{'user':usr={'email':usr.emails[0].value}})
-					,userAccess(req,res,()=>res.court.redirect({'pathname':req.query.state})))
+				:(Object.assign(req.session,{'user':usr={'email':usr.emails[0].value}}),userAccess(req,res,()=>((state,ii)=>
+						res.court.redirect((ii=state.indexOf('?'))<0?{'pathname':state}:{'pathname':state.substring(0,ii),'query':state.substring(ii+1)})
+					)(decodeURIComponent(req.query.state))))
 	 )))
 	.use('/auth',sstatic(path.join(WWW.sroot.dir,'auth')))
 	.use(userAccess)
@@ -108,7 +109,7 @@ return{
 	.use('/_ah/health',(req,res)=>{res.writeHead(200);res.end()})//gcloud VM health check requests//
 	.use(sstatic(WWW.root.dir,{'index':'home.html'}))
 );
-function userAccess(req,res,next){if(debug&&(WWW.name==='localhost')){req.session.user={'email':WWW.groups.admin.uids[0]};res.court.error=true}
+function userAccess(req,res,next){if(debug&&(WWW.name==='localhost')){req.session.user={'email':WWW.groups.admin.uids[0]};res.court.error=false}
 var  obj,sess=req.session
 	,usr=sess&&sess.user;
 	//,opts=sess?{'path':sess.cookie.path,'expires':sess.cookie.expires}:{'path':WWW.sroot.path,'maxAge':0};
@@ -120,7 +121,7 @@ if(!res.court.error&&(usr||{}).email&&GroupMethod('guest')[1](req,0,()=>console.
 		//obj=Object.assign({},WWW.gmail.obj);
 		//Object.assign(obj.query||(obj.query={}),res.court.newState(res.court.state));
 		//res.court.redirect(obj);
-		res.court.redirect({'pathname':path.join(WWW.sroot.path,'/auth',WWW.login),'query':Object.assign(res.court.newState(res.court.state),{'login':path.join(WWW.sroot.path,WWW.gmail.login)})});
+		res.court.redirect({'pathname':path.join(WWW.sroot.path,'/auth',WWW.login),'query':{'login':path.join(WWW.sroot.path,WWW.gmail.login),'state':res.court.state||req.originalUrl}});
 }}
 
 function GroupMethod(mm){var GG;return['/'+mm,(...aaa)=>
