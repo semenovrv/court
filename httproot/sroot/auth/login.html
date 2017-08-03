@@ -1,4 +1,14 @@
-<html><head></head><body><h1>Идет авторизация...</h1><script>
-	var qq=location.search.split('&login=');
-	setTimeout(()=>top.location=decodeURIComponent(qq[1])+(top===window?qq[0]:((qq=qq[0].split('='))[0]+'='+encodeURIComponent(top.location.pathname)+qq[1])),2000)
-</script></body></html>
+<html><head>
+<script src="/js/main.js"></script>
+<script>
+((pp)=>{setTimeout(()=>top.location=decodeURIComponent(pp.login)+(top===window
+		?qq.state&&('?state='+qq.state)
+		:('?state='+encodeURIComponent(top.location.pathname)+(qq.state?(encodeURIComponent('?state=')+qq.state):''))
+),2000);
+console.log(pp);
+var qq=pp.state&&pp.state.length?{'state':pp.state}:{}
+})(getQueryParameters());
+</script>
+</head><body>
+	<h1>Идет авторизация...</h1>
+</body></html>
