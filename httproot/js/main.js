@@ -7,6 +7,17 @@ function child$(pp,fn){return [].forEach.call(pp.children,fn)}
 //function _2json(res){try{res=res.json()}catch{}finally{return res}}
 ((crt,_2json,PP)=>Object.assign(crt,{
  'params':		ppp=>Object.keys(ppp).map(pp=>encodeURIComponent(pp)+'='+encodeURIComponent(ppp[pp])).join('&')
+ 
+,'Swipe':		sw=>{var pt=null;
+		document.addEventListener('touchstart',evt=>{pt=new Pt(evt)},false);
+		document.addEventListener('touchmove', evt=>{if(pt&&(Math.abs(pt.sub(evt).x)>Math.abs(pt.y))){
+			pt.x<0?sw.swipe.left():sw.swipe.right()
+			pt=null;                                             
+		}},false);
+		function Pt(evt){var touch=evt=>evt.touches[0]
+			,tt=touch(evt)
+			,self=Object.assign(this,{'x':tt.clientX,'y':tt.clientY,'sub':evt=>{self.x-=(tt=new Pt(evt)).x;self.y-=tt.y;return self}})
+		}return Object.assign(sw,{'swipe':{}})}
 ,'fetchTEXT':	(meth,err)=>		fetch(meth,{'credentials':'same-origin'})
 	.then(res=>((err=!res.ok),res)).then(function(res){var ret;try{ret=res.text().catch(err=>res)}catch(e){ret=res}finally{return ret}})
 	.then(res=>PP(err,res))
@@ -63,4 +74,4 @@ function newMonday(){var dd=new Date(...arguments),day=dd.getDay();return newDay
 
 function localDayString(now){return	now.getFullYear()+"-"+ld(now.getMonth()+1)+"-"+ld(now.getDate())}
 function getQueryParameters(str){return(str||location.search).replace(/(^\?)/,'').split("&").map(function(n){return n = n.split("="),this[n[0]] = n[1],this}.bind({}))[0]}
-window.onload=function(){var forget=document.getElementById('forget');if(forget)forget.addEventListener('click',window.crt.rmPIN)};
+//window.onload=function(){var forget=document.getElementById('forget');if(forget)forget.addEventListener('click',window.crt.rmPIN)};

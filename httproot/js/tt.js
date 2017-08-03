@@ -223,7 +223,7 @@ Object.assign(court,{
 			(sql||((nnn,vvv)=>{return{'statement':'insert into "'+table+'"('+nnn+')values('+new Array(nnn.length).fill('?')+')','values':vvv}}))
 				(...args)))
 			.then(dd=>dialogs.off('loading')||dd
-				,err=>dialogs.off('loading')||court.rmPIN()||dialogs.error(err,(el,msg)=>el.innerHTML=msg+'<br/>'+'Попробуйте еще раз!').then(_=>Promise.reject(err)))}
+				,err=>dialogs.off('loading')||dialogs.error(err,(el,msg)=>el.innerHTML=msg+'<br/>'+'Попробуйте еще раз!').then(_=>Promise.reject(err)))}
 ,'setSideMenu':		function(opts){function sw(m,q,v){m.style.display=q?(v||'flex'):'none'};
 (function(mm,fn){if(mm)document.body.addEventListener('mousemove',evt=>{fn(evt,mm)});return arguments.callee})
 	(opts.left,	(evt,mm)=>(dw=>sw(mm,evt.clientX*15<dw))		(document.documentElement.clientWidth))
