@@ -13,14 +13,17 @@ var	 sstatic	=	require('serve-static')
 	,cookieLn	=	require('cookie').serialize
 	,Session	=	require('express-session')
 	,SQLiteStore=	require('connect-sqlite3')(Session)
-	,debug=process.argv[2]
-,WWW=((root,sroot,name,port)=>{
-function UserGroup(uuu){var self=Object.assign(this,{
- 'uids':uuu||[]
-,'methods':{'guest':()=>self}
-,'includes':uid=>self.uids.some(id=>uid===id)
-})}
-return{
+	,debug=process.argv[2];
+
+((root,sroot,name,port)=>new Promise(rs=>{
+function UserGroup(group_id){var sql='select cust_id from customers where email=? inner join(select*from gcust where group_id='+group_id+')using(cust_id)'
+Object.assign(this,{
+ 'methods':{'known':()=>{}}
+,'group_id':group_id
+,'includes':email=>new Promise((rs,rj)=>DB().get(sql,email,(err,row)=>row?rs(row):rj()))
+})};
+function DB(){return new sqlite3.Database('court.sqlite',sqlite3.OPEN_READONLY)}
+DB().all('select*from groups',(err,data)=>rs({
  'name':	name
 ,'port':	port
 ,'sqlite':	{'time_table':'/time.table.sqlite'}
@@ -30,15 +33,11 @@ return{
 ,'login':	'/login.html'
 ,'gmail':	(gg=>Object.assign(gg,{'obj':{'pathname':path.join(sroot,gg.login)},'callback':'/auth/google/callback'}))({'login':'/auth/google/login'})
 ,'url':		Object.assign(debug&&(name==='localhost')?{'port':port,'protocol':'http'}:{'protocol':'https'},{'slashes':true,'hostname':name})//{'slashes':true,'protocol':'http','hostname':name,'port':port}
-//,'UserGroup':UserGroup
-,'groups':	{
-	 'admin':		new UserGroup(['semenovrv@gmail.com'])
-	,'timetable':	new UserGroup(['semenovrv@gmail.com','khrushcheva.tandem@gmail.com','anscha1978@gmail.com'])
-	,'trust':		new UserGroup(['nkholin.kmt@gmail.com','vs@chemical-block.com.com'])
-	,'guest':		new UserGroup()
-}
-}})('/httproot','/sroot',debug||'court-174506.appspot.com',8080)
-,GOOGLE={
+,'DB':		DB
+,'groups':	data.reduce((ggg,gg)=>((ggg[gg.group_name]=new UserGroup(gg.group_id)),ggg),{})
+}))}))('/httproot','/sroot',debug||'court-174506.appspot.com',8080).then(WWW=>{
+
+var GOOGLE={
 'qauth':{
  'response_type':	'code'
 ,'redirect_uri':	'https://'+path.join(WWW.name,WWW.sroot.path,WWW.gmail.callback)
@@ -57,7 +56,7 @@ return{
 				,'cookie':{'maxAge': WWW.maxage,'path':WWW.sroot.path}
 			   ,'rolling':true,'resave':true,'saveUninitialized':true})
 	,oauth2Client = new google.auth.OAuth2(GOOGLE.qauth.client_id,GOOGLE.web.client_secret,GOOGLE.qauth.redirect_uri)
-	,http		=	require('http').Server(connect()
+	,http		=	require('http').Server(connect().use('/_ah/health',(req,res)=>{res.writeHead(200);res.end()})//gcloud VM health check requests//
 	.use(WWW.sroot.path,connect()
 	.use((req,res,next)=>{
 		req.query=~req.url.indexOf('?')?qs.parse(parseurl(req).query):{};
@@ -65,6 +64,7 @@ return{
 					,'end':			data=>{data?res.end(JSON.stringify(data)):res.end();}
 					,'send':		function(err,data){if(err)console.log('ERROR',err);res.court.writeHead().court.end(data);}
 					,'serr':		err=>{res.writeHead('500',{'Content-Type':mime.lookup('json')});res.court.end(err=err.message||err);process.stderr.write(err.message||JSON.stringify(err));}
+					,'state':		req.originalUrl
 					,'redirect':	(uuu,opts)=>{
 										uuu=uuu.pathname?url.format(Object.assign(WWW.url,uuu)):uuu
 										res.statusCode=opts?opts.status||302:302;
@@ -102,37 +102,33 @@ return{
 	.use(...GroupMethod('meter'))
 	.use(...GroupMethod('sqlite3insert'))
 	//.use(...SQLite('court')).use(...SQLite('time.table'))
-	.use('/data',(...args)=>WWW.groups.admin.includes(args[0].session.user.email)?connect().use(sstatic(__dirname))(...args):(args[1].writeHead(404),args[1].end()))
+	.use('/data',(...args)=>WWW.groups.admin.includes(args[0].session.user.email).then(()=>connect().use(sstatic(__dirname))(...args),()=>{args[1].writeHead(404);args[1].end();}))
 	.use(sstatic(WWW.sroot.dir))
 	.use((req,res,next)=>console.log('not served!',req.url,WWW.sroot.dir)||next())
 )
-	.use('/_ah/health',(req,res)=>{res.writeHead(200);res.end()})//gcloud VM health check requests//
 	.use(sstatic(WWW.root.dir,{'index':'home.html'}))
 );
-function userAccess(req,res,next){if(debug&&(WWW.name==='localhost')){req.session.user={'email':WWW.groups.admin.uids[0]};res.court.error=false}
+function userAccess(req,res,next){if(debug&&(WWW.name==='localhost')){req.session.user={'email':'emenovrv@gmail.com'};delete res.court.error;console.log(req.originalUrl)}
 var  obj,sess=req.session
 	,usr=sess&&sess.user;
 	//,opts=sess?{'path':sess.cookie.path,'expires':sess.cookie.expires}:{'path':WWW.sroot.path,'maxAge':0};
-console.log(sess,res.court.error);
-if(!res.court.error&&(usr||{}).email&&GroupMethod('guest')[1](req,0,()=>console.log('not allowed!')||false)){
+((!res.court.error&&(usr||{}).email)?GroupMethod('known')[1](req,0,()=>Promise.reject()):Promise.reject()).then(
+ ()=>{	console.log('Access!',sess);
 		res.setHeader('Set-Cookie',[cookieLn('courtuser',usr.email,{'path':sess.cookie.path,'expires':sess.cookie.expires})]);
-		next();
-}else{	if(usr)delete req.session.user;
-		//obj=Object.assign({},WWW.gmail.obj);
-		//Object.assign(obj.query||(obj.query={}),res.court.newState(res.court.state));
-		//res.court.redirect(obj);
-		res.court.redirect({'pathname':path.join(WWW.sroot.path,'/auth',WWW.login),'query':{'login':path.join(WWW.sroot.path,WWW.gmail.login),'state':res.court.state||req.originalUrl}});
-}}
+		next();}
+,()=>{	console.log('Access denied!',res.court.error,sess);
+		if(usr)delete req.session.user;
+		res.court.redirect({'pathname':path.join(WWW.sroot.path,'/auth',WWW.login),'query':{'login':path.join(WWW.sroot.path,WWW.gmail.login),'state':res.court.state}});
+})}
 
-function GroupMethod(mm){var GG;return['/'+mm,(...aaa)=>
-	Object.keys(WWW.groups).some(gg=>(GG=WWW.groups[gg]).methods[mm]&&GG.includes(aaa[0].session.user.email))?GG.methods[mm](...aaa):aaa[2]()
+function GroupMethod(mm){
+var  groups=WWW.groups
+	,names=Object.keys(groups).filter(gg=>groups[gg].methods[mm])//,ggg=names.map(nn=>groups[nn].group_id);
+return['/'+mm,(...aaa)=>new Promise((rs,rj)=>WWW.DB().all('select*from gcust inner join(select cust_id from customers where email=?)using(cust_id)inner join(select*from groups)using(group_id)'
+			,aaa[0].session.user.email
+			,(err,rows)=>console.log('GroupMethod '+mm,err,rows)||rows.length?rs(rows.map(gg=>gg.group_name)):rj()
+		)).then(ggg=>groups[names.find(gg=>ggg.indexOf(gg)>=0)].methods[mm](...aaa),aaa[2])
 ];}
-/*
-function SQLite(db){return[
-	 '/data/'+(db=path.basename(parseurl(req).pathname))//(db=db+'.sqlite')
-	,(req,res)=>WWW.groups.admin.includes(req.session.user.email)?send(req,db,{'root':__dirname}).pipe(res):(res.writeHead(404),res.end())
-];}
-*/
 
 (sql=>{
 Object.assign(WWW.groups.admin.methods,{
@@ -156,8 +152,6 @@ var	 cc=query.values.length
 function end(){if(!--cc)query.refresh?db[query.refresh.method](query.refresh.statement,res.court.send):res.court.send();}
 }})(req.body)
 :next())
-
 );
 
-http.listen(WWW.port);
-console.log(new Date(),'court running...',WWW.name,GOOGLE);
+http.listen(WWW.port,()=>console.log(new Date(),'court running...',WWW,GOOGLE.qauth.redirect_uri));});
