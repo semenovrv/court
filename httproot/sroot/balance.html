@@ -52,7 +52,7 @@
 </form>
 
 
-<div class="mrow"><div><iframe id="accounts" src="accounts.html" style="width:100%;height:100%;border:none;"></iframe></div></div>
+<div class="mrow"><div><iframe id="accounts" src="accounts.html?" style="width:100%;height:100%;border:none;"></iframe></div></div>
 
 <div id="message"  class="bg"><div class="dialog">
 	<h1 class="err title">ERROR!</h1>
@@ -86,6 +86,7 @@ court.fetchJSON({'statement':'select*from lessons join customers using(cust_id) 
 		
 (iframe=>Object.assign(court,{'accounts':{
  'iframe':	iframe
+,'originalSrc':iframe.src
 ,'src':		iframe.src
 ,'update':function(period){this.period=Object.assign({},period)}
 ,'period':{}
@@ -93,7 +94,7 @@ court.fetchJSON({'statement':'select*from lessons join customers using(cust_id) 
 
 var	 DD=new Day();
 (el=>{	el.value=DD.localDayString(new Date());
-		el.addEventListener('change',_=>court.accounts.src=court.accounts.iframe.src='accounts.html?'+court.params({'now':el.value}))
+		el.addEventListener('change',_=>court.accounts.src=court.accounts.iframe.src=court.accounts.originalSrc+'&&'+court.params({'now':el.value}))
 })(elel['date']);
 
 id$('add').addEventListener('click',_=>{
@@ -108,8 +109,8 @@ Object.assign(data,{
 ,data['less_id']?{'income':Math.abs(data.income)}:{});
 ((nnn,vvv,fn)=>
 (fn=_=>court.postJSON({'db':'accounts','statement':'insert into '+pp.table+'('+nnn+')values('+new Array(nnn.length).fill('?')+')','values':vvv})
-	.then(dd=>dialogs.off('loading')||(court.accounts.iframe.src=court.accounts.src+'?'+court.params(Object.assign(pp,court.accounts.period)))
-		,err=>dialogs.off('loading')||court.rmPIN()||dialogs.message(err,(el,msg)=>el.innerHTML=msg+'<br/>'+'Попробуйте еще раз!').then(_=>Promise.reject(err)))
+	.then(dd=>dialogs.off('loading')||(court.accounts.iframe.src=court.accounts.src+'&&'+court.params(Object.assign(pp,court.accounts.period)))
+		,err=>dialogs.off('loading')||dialogs.message(err,(el,msg)=>el.innerHTML=msg+'<br/>'+'Попробуйте еще раз!').then(_=>Promise.reject(err)))
 	.catch(fn))()
 )(names.map(nn=>'"'+nn+'"'),[names.map(nn=>data[nn])]);
 });

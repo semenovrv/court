@@ -95,7 +95,7 @@ var  elel=form.elements,DD=new Day()
 	)(elel['table'].value,new Period());
 	
 // init controls //
-(opts=>{var	 now=opts.now?new Date(opts.now):new Date(),mm=now.getMonth(),yy=now.getFullYear();
+(opts=>{var	 now=opts.now?new Date(opts.now):new Date(),mm=now.getMonth(),yy=now.getFullYear();console.log(opts);
 [Object.assign(elel['from'],{'value':DD.localDayString(opts.from?new Date(+opts.from)	:new Date(yy,mm))})
 ,Object.assign(elel['to'],	{'value':DD.localDayString(opts.to	?new Date(+opts.to)		:new Date(yy,mm+1))})
 ,Object.assign(elel['table'],{'value':opts.table||'tennis'})
