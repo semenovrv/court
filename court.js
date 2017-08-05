@@ -16,7 +16,7 @@ var	 sstatic	=	require('serve-static')
 	,debug=process.argv[2];
 
 ((root,sroot,name,port)=>new Promise(rs=>{
-function UserGroup(group_id){var sql='select cust_id from customers where email=? inner join(select*from gcust where group_id='+group_id+')using(cust_id)'
+function UserGroup(group_id){var sql='select*from(select cust_id from customers where email=?)inner join(select*from gcust where group_id='+group_id+')using(cust_id)'
 Object.assign(this,{
  'methods':{'known':()=>{}}
 ,'group_id':group_id
