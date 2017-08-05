@@ -37,6 +37,31 @@ DB().all('select*from groups',(err,data)=>rs({
 ,'groups':	data.reduce((ggg,gg)=>((ggg[gg.group_name]=new UserGroup(gg.group_id)),ggg),{})
 }))}))('/httproot','/sroot',debug||'court-174506.appspot.com',8080).then(WWW=>{
 
+
+(sql=>{
+Object.assign(WWW.groups.admin.methods,{
+ 'meter':(req,res)=>{try{
+		(dd=>console.log(new Date(Number(dd[0])),dd.slice(1)))(req.query.val.split(','));
+		fs.appendFileSync(path.join(__dirname,'meter.csv'),req.query.val+'\n');
+		res.court.send();
+	}catch(err){res.court.serr(err);}}
+,'sqlite3insert':sql(q=>q)
+});
+Object.assign(WWW.groups.timetable.methods,{
+ 'sqlite3insert':sql(query=>query.db!=='accounts')
+});
+})(allow=>connect().use(jsonParser).use((req,res,next)=>req.method==='POST'
+?(query=>{console.log('sqlite3insert',req.session.user);if(allow(query)){
+var	 cc=query.values.length
+	,db = new sqlite3.Database(query.db+'.sqlite',sqlite3.OPEN_READWRITE)
+	,st = db.prepare(query.statement);
+	console.log('sqlite3insert',query);
+	query.values.forEach(vv=>st.run(vv,end));
+function end(){if(!--cc)query.refresh?db[query.refresh.method](query.refresh.statement,res.court.send):res.court.send();}
+}})(req.body)
+:next())
+);
+
 var GOOGLE={
 'qauth':{
  'response_type':	'code'
@@ -104,11 +129,11 @@ var GOOGLE={
 	//.use(...SQLite('court')).use(...SQLite('time.table'))
 	.use('/data',(...args)=>WWW.groups.admin.includes(args[0].session.user.email).then(()=>connect().use(sstatic(__dirname))(...args),()=>{args[1].writeHead(404);args[1].end();}))
 	.use(sstatic(WWW.sroot.dir))
-	.use((req,res,next)=>console.log('not served!',req.url,WWW.sroot.dir)||next())
+	.use((req,res,next)=>console.error('not served!',req.url,WWW.sroot.dir)||next())
 )
 	.use(sstatic(WWW.root.dir,{'index':'home.html'}))
 );
-function userAccess(req,res,next){if(debug&&(WWW.name==='localhost')){req.session.user={'email':'emenovrv@gmail.com'};delete res.court.error;console.log(req.originalUrl)}
+function userAccess(req,res,next){if(debug&&(WWW.name==='localhost')){req.session.user={'email':'semenovrv@gmail.com'};delete res.court.error;console.log(req.originalUrl)}
 var  obj,sess=req.session
 	,usr=sess&&sess.user;
 	//,opts=sess?{'path':sess.cookie.path,'expires':sess.cookie.expires}:{'path':WWW.sroot.path,'maxAge':0};
@@ -116,7 +141,7 @@ var  obj,sess=req.session
  ()=>{	console.log('Access!',sess);
 		res.setHeader('Set-Cookie',[cookieLn('courtuser',usr.email,{'path':sess.cookie.path,'expires':sess.cookie.expires})]);
 		next();}
-,()=>{	console.log('Access denied!',res.court.error,sess);
+,()=>{	console.error('Access denied!',res.court.error,sess);
 		if(usr)delete req.session.user;
 		res.court.redirect({'pathname':path.join(WWW.sroot.path,'/auth',WWW.login),'query':{'login':path.join(WWW.sroot.path,WWW.gmail.login),'state':res.court.state}});
 })}
@@ -126,32 +151,9 @@ var  groups=WWW.groups
 	,names=Object.keys(groups).filter(gg=>groups[gg].methods[mm])//,ggg=names.map(nn=>groups[nn].group_id);
 return['/'+mm,(...aaa)=>new Promise((rs,rj)=>WWW.DB().all('select*from gcust inner join(select cust_id from customers where email=?)using(cust_id)inner join(select*from groups)using(group_id)'
 			,aaa[0].session.user.email
-			,(err,rows)=>console.log('GroupMethod '+mm,err,rows)||rows.length?rs(rows.map(gg=>gg.group_name)):rj()
-		)).then(ggg=>groups[names.find(gg=>ggg.indexOf(gg)>=0)].methods[mm](...aaa),aaa[2])
+			,(err,rows)=>rows.length?rs(rows.map(gg=>gg.group_name)):rj()
+		))	.then(ggg=>{var gg=names.find(gg=>ggg.indexOf(gg)>=0);if(gg)groups[gg].methods[mm](...aaa);else{console.error('Method not found',mm,aaa[0].session.user.email);return Promise.reject()}})
+			.catch(aaa[2])
 ];}
-
-(sql=>{
-Object.assign(WWW.groups.admin.methods,{
- 'meter':(req,res)=>{try{
-		(dd=>console.log(new Date(Number(dd[0])),dd.slice(1)))(req.query.val.split(','));
-		fs.appendFileSync(path.join(__dirname,'meter.csv'),req.query.val+'\n');
-		res.court.send();
-	}catch(err){res.court.serr(err);}}
-,'sqlite3insert':sql(q=>q)
-});
-Object.assign(WWW.groups.timetable.methods,{
- 'sqlite3insert':sql(query=>query.db!=='accounts')
-});
-})(allow=>connect().use(jsonParser).use((req,res,next)=>req.method==='POST'
-?(query=>{console.log('sqlite3insert',req.session.user);if(allow(query)){
-var	 cc=query.values.length
-	,db = new sqlite3.Database(query.db+'.sqlite',sqlite3.OPEN_READWRITE)
-	,st = db.prepare(query.statement);
-	console.log('sqlite3insert',query);
-	query.values.forEach(vv=>st.run(vv,end));
-function end(){if(!--cc)query.refresh?db[query.refresh.method](query.refresh.statement,res.court.send):res.court.send();}
-}})(req.body)
-:next())
-);
 
 http.listen(WWW.port,()=>console.log(new Date(),'court running...',WWW,GOOGLE.qauth.redirect_uri));});
