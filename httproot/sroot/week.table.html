@@ -77,7 +77,7 @@ div.halfs>*{flex-basis:50%;text-align: center;}
 <h3 class="title"></h3>
 <form name="timeform">
 <div class="rows">
-	<div class="halfs"><input name="starttime" type="time" step="60"/><input name="endtime" type="time" step="60"/></div>
+	<div class="halfs"><input name="starttime" type="time" step="60" class="tm"/><input name="endtime" type="time" step="60" class="tm"/></div>
 	<div style="white-space:nowrap;">
 		<select name="count">
 			<option value="tmcount" selected="selected">кол-во занятий</option>
@@ -315,7 +315,7 @@ Object.assign(TimeCell.prototype=Object.create(Parent.prototype),{
 						setTitle(dialog,mon,day);
 					})(cc=>cc&&(cc.col==col)&&cc.isTimeCell&&cc.data))(elid(cell))
 				},'timeform').then(_=>timedone()
-					.then(dd=>document['timeform'].querySelectorAll('input:invalid').length
+					.then(dd=>document['timeform'].querySelectorAll('input:not(.tm):invalid').length
 						?dialogs.error({'message':'Не все поля введены правильно'}).then(_=>Promise.Reject(dd)):Promise.resolve(dd))
 					.catch(timeDialog)
 				)}
