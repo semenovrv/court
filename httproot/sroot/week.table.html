@@ -298,7 +298,7 @@ cell.addEventListener('click',self.click);
 
 Object.assign(TimeCell.prototype=Object.create(Parent.prototype),{
  'day':			cell=>elid(cell)
-,'emptyClick':	function(){var  cell=this,LL=elid(cell.parentNode),day=TimeCell.prototype.day(cell)
+,'emptyClick':	function(evt){var  cell=evt.target,LL=cell===this?elid(cell.parentNode):0,day=TimeCell.prototype.day(cell);console.log(LL,day,cell);
 				function timeDialog(data){return dialogs.ask('timeset',(form,dialog)=>{
 					var elel=form.elements;
 					data&&(dd=>{for(var nn in dd)(elel[nn]||{}).value=data[nn];return dd})(data)||(col=>(data=>{
